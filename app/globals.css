@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+@theme {
+  --color-mnr-bg: #09090b;
+  --color-mnr-surface: #18181b;
+  --color-mnr-surface-hover: #27272a;
+  --color-mnr-accent: #ccff00;
+  --color-mnr-accent-dim: rgba(204, 255, 0, 0.15);
+  --color-mnr-text: #f4f4f5;
+  --color-mnr-muted: #a1a1aa;
+  --color-mnr-border: #3f3f46;
+  --color-mnr-error: #ff3366;
+}
+
+body {
+  background-color: #000;
+  color: var(--color-mnr-text);
+}
+
+/* Custom Selection */
+::selection {
+  background-color: var(--color-mnr-accent);
+  color: #000;
+}
+
+@keyframes scanline {
+  0% { top: 0; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+.animate-scanline {
+  animation: scanline 2s linear infinite;
+}
+
+@keyframes chroma-ring {
+  0% {
+    background-position: 0% 50%;
+    opacity: 0.3;
+  }
+  25% {
+    background-position: 50% 100%;
+    opacity: 0.6;
+  }
+  50% {
+    background-position: 100% 50%;
+    opacity: 0.9;
+  }
+  75% {
+    background-position: 50% 0%;
+    opacity: 0.6;
+  }
+  100% {
+    background-position: 0% 50%;
+    opacity: 0.3;
+  }
+}
+
+.animate-chroma-ring {
+  animation: chroma-ring 4s ease-in-out infinite;
+  background-size: 400% 400%;
+}
+
+/* Sharp neo-brutalist icons */
+svg, svg.lucide {
+  stroke-linecap: square !important;
+  stroke-linejoin: miter !important;
+}

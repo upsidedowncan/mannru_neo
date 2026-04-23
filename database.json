@@ -1,0 +1,295 @@
+{
+  "users": [
+    {
+      "id": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "username": "mannru",
+      "fullName": "Ахмед",
+      "passwordHash": "$2b$10$jeorECT4F8LWSIr0BEtzS.uP/2KeYdlTGH1q7bwqHBtrRxpltQoZG",
+      "balance": 4500,
+      "createdAt": "2026-04-21T10:38:42.893Z"
+    },
+    {
+      "id": "a53cb7eb-544e-4e7b-8b11-73daeb250869",
+      "username": "testing",
+      "fullName": "MannruTest",
+      "passwordHash": "$2b$10$l73RHtAvwQ1xXh6HUHZa7OSzUz.tc.oiUC6knqvYnyUKK6QoyJ6Gu",
+      "balance": 10500,
+      "createdAt": "2026-04-21T11:22:10.796Z"
+    }
+  ],
+  "transactions": [
+    {
+      "id": "4eb3c92f-43da-4917-bc52-650e7b528a5c",
+      "senderId": "system",
+      "receiverId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "amount": 10000,
+      "type": "deposit",
+      "status": "completed",
+      "timestamp": "2026-04-21T10:38:42.898Z",
+      "description": "Приветственный бонус Mannru"
+    },
+    {
+      "id": "7b267c3a-4105-4703-8063-c984b65a206f",
+      "senderId": "system",
+      "receiverId": "a53cb7eb-544e-4e7b-8b11-73daeb250869",
+      "amount": 10000,
+      "type": "deposit",
+      "status": "completed",
+      "timestamp": "2026-04-21T11:22:10.799Z",
+      "description": "Приветственный бонус Mannru"
+    },
+    {
+      "id": "5f3dfa98-b99e-4e71-8e1d-59058c0f70b9",
+      "senderId": "a53cb7eb-544e-4e7b-8b11-73daeb250869",
+      "receiverId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "amount": 500,
+      "type": "transfer",
+      "status": "completed",
+      "timestamp": "2026-04-21T11:22:31.209Z",
+      "description": "Крутой"
+    },
+    {
+      "id": "dc21bbe3-c154-41b6-b9e9-2545c75a7727",
+      "senderId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "receiverId": "a53cb7eb-544e-4e7b-8b11-73daeb250869",
+      "amount": 500,
+      "type": "transfer",
+      "status": "completed",
+      "timestamp": "2026-04-21T11:24:56.957Z",
+      "description": "Перевод средств"
+    },
+    {
+      "id": "63018f42-d5f8-4b6b-80e9-d5bbafd9297b",
+      "senderId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "receiverId": "a53cb7eb-544e-4e7b-8b11-73daeb250869",
+      "amount": 500,
+      "type": "transfer",
+      "status": "completed",
+      "timestamp": "2026-04-21T11:25:26.908Z",
+      "description": "sdfdsf"
+    }
+  ],
+  "notifications": [
+    {
+      "userId": "a53cb7eb-544e-4e7b-8b11-73daeb250869",
+      "type": "transfer_sent",
+      "title": "Перевод отправлен",
+      "message": "Вы отправили 500 МР пользователю @mannru",
+      "amount": 500,
+      "id": "6d6429e0-fccb-4d68-972d-68b9b9ff99c6",
+      "timestamp": "2026-04-21T11:22:31.217Z",
+      "read": false
+    },
+    {
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "type": "transfer_received",
+      "title": "Перевод получен",
+      "message": "Вы получили 500 МР от пользователя @testing",
+      "amount": 500,
+      "id": "3840bc7f-e6a4-4810-a5e9-d3d9f42ae069",
+      "timestamp": "2026-04-21T11:22:31.220Z",
+      "read": true
+    },
+    {
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "type": "transfer_sent",
+      "title": "Перевод отправлен",
+      "message": "Вы отправили 500 МР пользователю @testing",
+      "amount": 500,
+      "id": "00e4d7fb-2004-4963-8b06-e3ba80f72ee9",
+      "timestamp": "2026-04-21T11:24:56.965Z",
+      "read": false
+    },
+    {
+      "userId": "a53cb7eb-544e-4e7b-8b11-73daeb250869",
+      "type": "transfer_received",
+      "title": "Перевод получен",
+      "message": "Вы получили 500 МР от пользователя @mannru",
+      "amount": 500,
+      "id": "ed7a3f47-f991-4a2a-97c1-8a1d40823af8",
+      "timestamp": "2026-04-21T11:24:56.969Z",
+      "read": false
+    },
+    {
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "type": "transfer_sent",
+      "title": "Перевод отправлен",
+      "message": "Вы отправили 500 МР пользователю @testing",
+      "amount": 500,
+      "id": "6575bbfa-a32d-4935-8fc2-26dd4a4b3380",
+      "timestamp": "2026-04-21T11:25:26.912Z",
+      "read": false
+    },
+    {
+      "userId": "a53cb7eb-544e-4e7b-8b11-73daeb250869",
+      "type": "transfer_received",
+      "title": "Перевод получен",
+      "message": "Вы получили 500 МР от пользователя @mannru",
+      "amount": 500,
+      "id": "e6eefa3f-5c9c-4aaa-9fc5-615ca38f0c9b",
+      "timestamp": "2026-04-21T11:25:26.918Z",
+      "read": false
+    }
+  ],
+  "cards": [
+    {
+      "id": "23a12ab8-86b3-4deb-9a08-50705be5a899",
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "tier": "standard",
+      "lastFour": "5383",
+      "balance": 11000,
+      "createdAt": "2026-04-21T11:46:54.405Z",
+      "isActive": false
+    },
+    {
+      "id": "84ad9669-3c7a-4d0e-92d1-23c87bbc17b1",
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "tier": "gold",
+      "lastFour": "5933",
+      "balance": 0,
+      "createdAt": "2026-04-21T11:47:15.022Z",
+      "isActive": false
+    },
+    {
+      "id": "7a420505-46ec-4405-b5d8-708f5d686c11",
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "tier": "standard",
+      "lastFour": "3519",
+      "balance": 100000,
+      "createdAt": "2026-04-21T11:47:41.850Z",
+      "isActive": true
+    },
+    {
+      "id": "c5e1c0f6-7a0d-41ad-92eb-a6966e26eca2",
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "tier": "black",
+      "lastFour": "8190",
+      "balance": 0,
+      "createdAt": "2026-04-21T11:57:35.218Z",
+      "isActive": true
+    }
+  ],
+  "wireTransfers": [],
+  "emojiTransfers": [
+    {
+      "id": "7d0ebd8c-fe94-497c-bd5a-6438360f4710",
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "code": "💎🎬📺🍟💎",
+      "amount": 500,
+      "senderUsername": "mannru",
+      "isUsed": false,
+      "expiresAt": "2026-04-21T14:19:43.637Z",
+      "createdAt": "2026-04-21T14:14:43.637Z"
+    },
+    {
+      "id": "d5b34a8f-539f-4b9a-8b98-54ab4c7f4fcc",
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "code": "🤥🤥🤪🤫😂",
+      "amount": 500,
+      "senderUsername": "mannru",
+      "isUsed": false,
+      "expiresAt": "2026-04-21T14:21:26.620Z",
+      "createdAt": "2026-04-21T14:16:26.623Z"
+    },
+    {
+      "id": "5088d70b-9c84-4f76-9008-43565bf3148f",
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "code": "�😪😨�🤗",
+      "amount": 1,
+      "senderUsername": "mannru",
+      "isUsed": false,
+      "expiresAt": "2026-04-21T14:21:42.068Z",
+      "createdAt": "2026-04-21T14:16:42.068Z"
+    },
+    {
+      "id": "cf94ae4a-ef78-4df7-ad58-887f559192ae",
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "code": "🤗🤤🤫�🤥",
+      "amount": 100,
+      "senderUsername": "mannru",
+      "isUsed": false,
+      "expiresAt": "2026-04-21T14:23:24.141Z",
+      "createdAt": "2026-04-21T14:18:24.142Z"
+    },
+    {
+      "id": "70c03f60-a5e6-4233-97d3-ef173c483734",
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "code": "🤗😘🤤😇😬",
+      "amount": 12,
+      "senderUsername": "mannru",
+      "isUsed": false,
+      "expiresAt": "2026-04-21T14:23:47.207Z",
+      "createdAt": "2026-04-21T14:18:47.207Z"
+    },
+    {
+      "id": "dd073dcd-ccbb-4f5c-b200-ba4019dc83e7",
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "code": "��😙�😱",
+      "amount": 1,
+      "senderUsername": "mannru",
+      "isUsed": false,
+      "expiresAt": "2026-04-21T14:31:30.179Z",
+      "createdAt": "2026-04-21T14:26:30.180Z"
+    },
+    {
+      "id": "15357a3a-9ee1-4fcf-bb2d-d565357f968b",
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "code": "🤮�😇😔😂",
+      "amount": 1,
+      "senderUsername": "mannru",
+      "isUsed": false,
+      "expiresAt": "2026-04-21T14:31:30.213Z",
+      "createdAt": "2026-04-21T14:26:30.213Z"
+    },
+    {
+      "id": "46e8c41a-8133-4064-980e-738dbf263fd3",
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "code": "😭🤫�😇🤑",
+      "amount": 1,
+      "senderUsername": "mannru",
+      "isUsed": false,
+      "expiresAt": "2026-04-21T14:50:11.592Z",
+      "createdAt": "2026-04-21T14:45:11.592Z"
+    },
+    {
+      "id": "5598c355-1d4c-49d1-81b1-e7198017a308",
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "code": "�😒�😚😉",
+      "amount": 123,
+      "senderUsername": "mannru",
+      "isUsed": false,
+      "expiresAt": "2026-04-21T14:51:17.894Z",
+      "createdAt": "2026-04-21T14:46:17.894Z"
+    },
+    {
+      "id": "3aa666f4-df15-4683-abf7-e95d6c2f73d0",
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "code": "�😊😒😥😰",
+      "amount": 324,
+      "senderUsername": "mannru",
+      "isUsed": false,
+      "expiresAt": "2026-04-21T14:51:27.652Z",
+      "createdAt": "2026-04-21T14:46:27.652Z"
+    },
+    {
+      "id": "505559e3-c767-4a1f-a2dd-cd3e8901c7de",
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "code": "🤐😬😝😪😇",
+      "amount": 34,
+      "senderUsername": "mannru",
+      "isUsed": false,
+      "expiresAt": "2026-04-21T15:11:47.186Z",
+      "createdAt": "2026-04-21T15:06:47.186Z"
+    },
+    {
+      "id": "92780f3d-6b07-41f4-a8b6-999a31f7c813",
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "code": "🤢😂😌😌😪",
+      "amount": 123,
+      "senderUsername": "mannru",
+      "isUsed": false,
+      "expiresAt": "2026-04-21T15:12:39.114Z",
+      "createdAt": "2026-04-21T15:07:39.116Z"
+    }
+  ]
+}
