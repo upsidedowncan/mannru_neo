@@ -1,9 +1,5 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-
-const execAsync = promisify(exec);
 
 export interface User {
   id: string;
@@ -113,26 +109,60 @@ export async function writeDB(data: DBData): Promise<void> {
   memoryCache = data;
   await fs.writeFile(DB_FILE, JSON.stringify(data, null, 2));
   
-  // Sync to GitHub
-  try {
-    await syncToGitHub();
-  } catch (error) {
-    console.error('Failed to sync to GitHub:', error);
-    // Don't throw error - database write should succeed even if sync fails
+  // Sync to GitHub (only if token is available)
+  if (process.env.GITHUB_TOKEN && process.env.GITHUB_REPO) {
+    try {
+      await syncToGitHub(data);
+    } catch (error) {
+      console.error('Failed to sync to GitHub:', error);
+      // Don't throw error - database write should succeed even if sync fails
+    }
   }
 }
 
-async function syncToGitHub(): Promise<void> {
+async function syncToGitHub(data: DBData): Promise<void> {
+  const [owner, repo] = process.env.GITHUB_REPO!.split('/');
+  const token = process.env.GITHUB_TOKEN!;
+  const filePath = 'database.json';
+  const content = Buffer.from(JSON.stringify(data, null, 2)).toString('base64');
+  
   try {
-    const { stdout, stderr } = await execAsync('git add database.json && git commit -m "Update database" && git push', {
-      cwd: process.cwd(),
+    // Get current file SHA
+    const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
+      headers: {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github.v3+json',
+      },
     });
-    console.log('Database synced to GitHub');
-  } catch (error: any) {
-    // If nothing to commit, that's okay
-    if (error.message.includes('nothing to commit')) {
-      return;
+    
+    let sha: string | undefined;
+    if (response.ok) {
+      const fileData = await response.json();
+      sha = fileData.sha;
     }
+    
+    // Create or update file
+    const updateResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: 'Update database',
+        content: content,
+        sha: sha,
+      }),
+    });
+    
+    if (!updateResponse.ok) {
+      throw new Error(`GitHub API error: ${updateResponse.statusText}`);
+    }
+    
+    console.log('Database synced to GitHub');
+  } catch (error) {
+    console.error('GitHub sync error:', error);
     throw error;
   }
 }
