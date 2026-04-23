@@ -45,10 +45,22 @@ export async function POST(request: NextRequest) {
     await createTransaction(session.userId, emojiTransfer.userId, emojiTransfer.amount, 'transfer', `Получено от ${emojiTransfer.senderUsername} (Emoji: ${code})`);
 
     // Create notification for sender
-    await createNotification(emojiTransfer.userId, `Ваш перевод на ${emojiTransfer.amount} МР был получен`, 'success');
+    await createNotification({
+      userId: emojiTransfer.userId,
+      type: 'transfer_sent',
+      title: 'Перевод получен',
+      message: `Ваш перевод на ${emojiTransfer.amount} МР был получен`,
+      amount: emojiTransfer.amount,
+    });
 
     // Create notification for receiver
-    await createNotification(session.userId, `Вы получили ${emojiTransfer.amount} МР от ${emojiTransfer.senderUsername}`, 'success');
+    await createNotification({
+      userId: session.userId,
+      type: 'transfer_received',
+      title: 'Перевод получен',
+      message: `Вы получили ${emojiTransfer.amount} МР от ${emojiTransfer.senderUsername}`,
+      amount: emojiTransfer.amount,
+    });
 
     return NextResponse.json({ success: true, amount: emojiTransfer.amount, sender: emojiTransfer.senderUsername });
   } catch (error) {
