@@ -1,5 +1,9 @@
 import fs from 'fs/promises';
 import path from 'path';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
 
 export interface User {
   id: string;
@@ -108,6 +112,29 @@ export async function readDB(): Promise<DBData> {
 export async function writeDB(data: DBData): Promise<void> {
   memoryCache = data;
   await fs.writeFile(DB_FILE, JSON.stringify(data, null, 2));
+  
+  // Sync to GitHub
+  try {
+    await syncToGitHub();
+  } catch (error) {
+    console.error('Failed to sync to GitHub:', error);
+    // Don't throw error - database write should succeed even if sync fails
+  }
+}
+
+async function syncToGitHub(): Promise<void> {
+  try {
+    const { stdout, stderr } = await execAsync('git add database.json && git commit -m "Update database" && git push', {
+      cwd: process.cwd(),
+    });
+    console.log('Database synced to GitHub');
+  } catch (error: any) {
+    // If nothing to commit, that's okay
+    if (error.message.includes('nothing to commit')) {
+      return;
+    }
+    throw error;
+  }
 }
 
 export async function getUser(id: string): Promise<User | undefined> {
@@ -400,4 +427,23 @@ export async function useEmojiTransfer(code: string): Promise<boolean> {
 export async function getUserEmojiTransfers(userId: string): Promise<EmojiTransfer[]> {
   const db = await readDB();
   return db.emojiTransfers.filter((t) => t.userId === userId);
+}
+
+export async function createTransaction(senderId: string, receiverId: string | null, amount: number, type: Transaction['type'], description: string): Promise<Transaction> {
+  const db = await readDB();
+  
+  const newTransaction: Transaction = {
+    id: crypto.randomUUID(),
+    senderId,
+    receiverId,
+    amount,
+    type,
+    status: 'completed',
+    timestamp: new Date().toISOString(),
+    description,
+  };
+  
+  db.transactions.push(newTransaction);
+  await writeDB(db);
+  return newTransaction;
 }

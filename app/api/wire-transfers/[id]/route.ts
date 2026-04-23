@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { executeWireTransfer, pauseWireTransfer, resumeWireTransfer, deleteWireTransfer } from '@/lib/db';
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getSession();
     if (!session?.userId) {
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const body = await request.json();
     const { action } = body;
 
-    const wireId = params.id;
+    const { id: wireId } = await params;
 
     if (action === 'execute') {
       const wireTransfer = await executeWireTransfer(wireId);
@@ -40,14 +40,14 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getSession();
     if (!session?.userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const wireId = params.id;
+    const { id: wireId } = await params;
     const success = await deleteWireTransfer(wireId, session.userId);
 
     if (!success) {
