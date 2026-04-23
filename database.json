@@ -15,6 +15,14 @@
       "passwordHash": "$2b$10$l73RHtAvwQ1xXh6HUHZa7OSzUz.tc.oiUC6knqvYnyUKK6QoyJ6Gu",
       "balance": 10500,
       "createdAt": "2026-04-21T11:22:10.796Z"
+    },
+    {
+      "id": "738966be-21a5-4df8-811f-6bd02a47e7c9",
+      "username": "utoplennik69pc@gmail.com",
+      "fullName": "Mannru",
+      "passwordHash": "$2b$10$BSa82f5h77KldIfpVO03muWVLXJuCulGYCYHT0sxXGoLQ/y2uqWhS",
+      "balance": 10000,
+      "createdAt": "2026-04-23T13:44:45.193Z"
     }
   ],
   "transactions": [
@@ -67,6 +75,16 @@
       "status": "completed",
       "timestamp": "2026-04-21T11:25:26.908Z",
       "description": "sdfdsf"
+    },
+    {
+      "id": "c5aa3a09-951d-476b-8fcd-43c203d5af70",
+      "senderId": "system",
+      "receiverId": "738966be-21a5-4df8-811f-6bd02a47e7c9",
+      "amount": 10000,
+      "type": "deposit",
+      "status": "completed",
+      "timestamp": "2026-04-23T13:44:45.193Z",
+      "description": "Приветственный бонус Mannru"
     }
   ],
   "notifications": [
@@ -166,6 +184,15 @@
       "lastFour": "8190",
       "balance": 0,
       "createdAt": "2026-04-21T11:57:35.218Z",
+      "isActive": true
+    },
+    {
+      "id": "ce69277d-ae61-4ccd-9691-fa2aa6751e77",
+      "userId": "738966be-21a5-4df8-811f-6bd02a47e7c9",
+      "tier": "standard",
+      "lastFour": "7195",
+      "balance": 10000,
+      "createdAt": "2026-04-23T13:44:45.193Z",
       "isActive": true
     }
   ],

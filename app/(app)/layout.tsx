@@ -11,7 +11,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <ToastProvider>
-      <main className="flex-1 pb-24 md:pl-20 lg:pl-64 h-full overflow-y-auto custom-scrollbar">
+      <main className="flex-1 pb-24 md:pl-24 lg:pl-72 h-full overflow-y-auto custom-scrollbar">
         {children}
       </main>
       <BottomNav />

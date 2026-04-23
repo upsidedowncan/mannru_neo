@@ -386,7 +386,7 @@ export default function CardsPage() {
                       setSelectedCard(card);
                       setShowTransferModal(true);
                     }}
-                    className="w-full bg-mnr-accent text-black font-bold text-[12px] uppercase py-2 flex items-center justify-center gap-2 hover:bg-mnr-accent/90 transition-colors"
+                    className="w-full bg-mnr-accent text-black font-bold text-[12px] uppercase py-1.5 px-3 flex items-center justify-center gap-2 hover:bg-mnr-accent/90 transition-colors"
                   >
                     Перевести
                   </button>
@@ -416,11 +416,11 @@ export default function CardsPage() {
                       <button
                         key={tier}
                         onClick={() => setSelectedTier(tier)}
-                        className={`p-4 border-2 transition-all ${
-                          selectedTier === tier
-                            ? 'border-mnr-accent bg-mnr-accent/10'
-                            : 'border-mnr-border hover:border-mnr-accent/50'
-                        }`}
+                       className={`p-3 border-2 transition-all ${
+                           selectedTier === tier
+                             ? 'border-mnr-accent bg-mnr-accent/10'
+                             : 'border-mnr-border hover:border-mnr-accent/50'
+                         }`}
                       >
                         <div className={`font-bold text-[14px] ${tierColors[tier].text} uppercase`}>
                           {tierNames[tier]}
@@ -488,11 +488,11 @@ export default function CardsPage() {
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       onClick={() => setTransferDirection('to-card')}
-                      className={`p-4 border-2 transition-all ${
-                        transferDirection === 'to-card'
-                          ? 'border-mnr-accent bg-mnr-accent/10'
-                          : 'border-mnr-border hover:border-mnr-accent/50'
-                      }`}
+                       className={`p-3 border-2 transition-all ${
+                         transferDirection === 'to-card'
+                           ? 'border-mnr-accent bg-mnr-accent/10'
+                           : 'border-mnr-border hover:border-mnr-accent/50'
+                       }`}
                     >
                       <div className="flex items-center justify-center gap-2">
                         <ArrowDown className="w-4 h-4" />
@@ -503,11 +503,11 @@ export default function CardsPage() {
                     </button>
                     <button
                       onClick={() => setTransferDirection('to-balance')}
-                      className={`p-4 border-2 transition-all ${
-                        transferDirection === 'to-balance'
-                          ? 'border-mnr-accent bg-mnr-accent/10'
-                          : 'border-mnr-border hover:border-mnr-accent/50'
-                      }`}
+                       className={`p-3 border-2 transition-all ${
+                         transferDirection === 'to-balance'
+                           ? 'border-mnr-accent bg-mnr-accent/10'
+                           : 'border-mnr-border hover:border-mnr-accent/50'
+                       }`}
                     >
                       <div className="flex items-center justify-center gap-2">
                         <ArrowUp className="w-4 h-4" />

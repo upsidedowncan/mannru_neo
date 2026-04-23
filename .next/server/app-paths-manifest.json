@@ -1,0 +1,11 @@
+{
+  "/api/user/route": "app/api/user/route.js",
+  "/api/wire-transfers/route": "app/api/wire-transfers/route.js",
+  "/api/cards/route": "app/api/cards/route.js",
+  "/(app)/profile/page": "app/(app)/profile/page.js",
+  "/(app)/page": "app/(app)/page.js",
+  "/(app)/cards/page": "app/(app)/cards/page.js",
+  "/(app)/transfer/page": "app/(app)/transfer/page.js",
+  "/(app)/history/page": "app/(app)/history/page.js",
+  "/(app)/qr/page": "app/(app)/qr/page.js"
+}
