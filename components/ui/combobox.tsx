@@ -35,10 +35,13 @@ export function Combobox({ options, value, onChange, placeholder = 'Выбери
   }, []);
 
   return (
-    <div ref={ref} className={cn('relative', className)}>
+    <div ref={ref} className={cn('relative', className)} onMouseDown={(e) => e.stopPropagation()}>
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
         className="w-full bg-mnr-bg border border-mnr-border px-4 py-3 text-mnr-text font-mono text-base text-left flex items-center justify-between focus:outline-none focus:border-mnr-accent"
       >
         <span className={cn(!selectedOption && 'text-mnr-muted')}>
@@ -48,12 +51,13 @@ export function Combobox({ options, value, onChange, placeholder = 'Выбери
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-mnr-surface border border-mnr-border max-h-60 overflow-y-auto">
+        <div className="absolute z-[9999] w-full mt-1 bg-mnr-surface border border-mnr-border max-h-60 overflow-y-auto shadow-lg nodrag">
           {options.map((option) => (
             <button
               key={option.value}
               type="button"
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 onChange(option.value);
                 setIsOpen(false);
               }}

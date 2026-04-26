@@ -1,4 +1,4 @@
-// File: /run/media/udc/Files/mannru_neo/app/(app)/page.tsx
+// File: /home/deda/mannru_neo/app/(app)/page.tsx
 import * as entry from '../../../../app/(app)/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

@@ -13,27 +13,31 @@ interface NotificationsPanelProps {
 
 export function NotificationsPanel({ notifications, onMarkAsRead }: NotificationsPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [previousCount, setPreviousCount] = useState(0);
   const { toast } = useToast();
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   // Show toast for new unread notifications
   useEffect(() => {
-    if (unreadCount > previousCount) {
-      const newNotifications = notifications.filter((n) => !n.read).slice(0, unreadCount - previousCount);
-      newNotifications.forEach((notification) => {
-        const toastType = notification.type === 'transfer_received' ? 'transfer_received' as const :
-                         notification.type === 'transfer_sent' ? 'transfer_sent' as const : 'info' as const;
-        toast({
-          type: toastType,
-          title: notification.title,
-          message: notification.message,
-          amount: notification.amount,
-        });
+    const shownNotificationIds = JSON.parse(localStorage.getItem('shownNotificationIds') || '[]');
+    const newUnreadNotifications = notifications.filter((n) => !n.read && !shownNotificationIds.includes(n.id));
+    
+    newUnreadNotifications.forEach((notification) => {
+      const toastType = notification.type === 'transfer_received' ? 'transfer_received' as const :
+                       notification.type === 'transfer_sent' ? 'transfer_sent' as const : 'info' as const;
+      toast({
+        type: toastType,
+        title: notification.title,
+        message: notification.message,
+        amount: notification.amount,
       });
+    });
+
+    // Mark these notifications as shown
+    if (newUnreadNotifications.length > 0) {
+      const newShownIds = [...shownNotificationIds, ...newUnreadNotifications.map(n => n.id)];
+      localStorage.setItem('shownNotificationIds', JSON.stringify(newShownIds));
     }
-    setPreviousCount(unreadCount);
-  }, [unreadCount, notifications, previousCount, toast]);
+  }, [notifications, toast]);
 
   const getIcon = (type: Notification['type']) => {
     switch (type) {

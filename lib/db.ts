@@ -67,6 +67,70 @@ export interface EmojiTransfer {
   createdAt: string;
 }
 
+export type MiniAppComponentType = 'button' | 'text' | 'spacer' | 'grid';
+
+export interface MiniAppComponent {
+  id: string;
+  type: MiniAppComponentType;
+  props: Record<string, any>;
+  order: number;
+}
+
+export interface MiniAppVariable {
+  id: string;
+  name: string;
+  defaultValue: number;
+  description?: string;
+}
+
+export interface MiniAppNode {
+  id: string;
+  type: 'buttonClick' | 'incrementVar' | 'decrementVar' | 'setVar' | 'addMoney' | 'removeMoney' | 'condition' | 'math';
+  x: number;
+  y: number;
+  data: Record<string, any>;
+}
+
+export interface MiniAppEdge {
+  id: string;
+  sourceNodeId: string;
+  targetNodeId: string;
+  sourceOutput?: string;
+  targetInput?: string;
+}
+
+export interface MiniApp {
+  id: string;
+  name: string;
+  description: string;
+  authorId: string;
+  authorUsername: string;
+  components: MiniAppComponent[];
+  variables: any[];
+  nodes?: any[];
+  edges?: any[];
+  isPublic: boolean;
+  downloads: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserInstalledMiniApp {
+  id: string;
+  userId: string;
+  miniAppId: string;
+  installedAt: string;
+}
+
+export interface MiniAppVariableState {
+  id: string;
+  userId: string;
+  miniAppId: string;
+  variableId: string;
+  value: number;
+  updatedAt: string;
+}
+
 export interface DBData {
   users: User[];
   transactions: Transaction[];
@@ -74,6 +138,9 @@ export interface DBData {
   cards: Card[];
   wireTransfers: WireTransfer[];
   emojiTransfers: EmojiTransfer[];
+  miniApps: MiniApp[];
+  userInstalledMiniApps: UserInstalledMiniApp[];
+  miniAppVariableStates: MiniAppVariableState[];
 }
 
 const DB_FILE = path.join(process.cwd(), 'database.json');
@@ -96,6 +163,9 @@ export async function readDB(): Promise<DBData> {
         cards: [],
         wireTransfers: [],
         emojiTransfers: [],
+        miniApps: [],
+        userInstalledMiniApps: [],
+        miniAppVariableStates: [],
       };
       await fs.writeFile(DB_FILE, JSON.stringify(defaultData, null, 2));
       memoryCache = defaultData;
@@ -108,63 +178,6 @@ export async function readDB(): Promise<DBData> {
 export async function writeDB(data: DBData): Promise<void> {
   memoryCache = data;
   await fs.writeFile(DB_FILE, JSON.stringify(data, null, 2));
-  
-  // Sync to GitHub (only if token is available)
-  if (process.env.GITHUB_TOKEN && process.env.GITHUB_REPO) {
-    try {
-      await syncToGitHub(data);
-    } catch (error) {
-      console.error('Failed to sync to GitHub:', error);
-      // Don't throw error - database write should succeed even if sync fails
-    }
-  }
-}
-
-async function syncToGitHub(data: DBData): Promise<void> {
-  const [owner, repo] = process.env.GITHUB_REPO!.split('/');
-  const token = process.env.GITHUB_TOKEN!;
-  const filePath = 'database.json';
-  const content = Buffer.from(JSON.stringify(data, null, 2)).toString('base64');
-  
-  try {
-    // Get current file SHA
-    const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
-      headers: {
-        'Authorization': `token ${token}`,
-        'Accept': 'application/vnd.github.v3+json',
-      },
-    });
-    
-    let sha: string | undefined;
-    if (response.ok) {
-      const fileData = await response.json();
-      sha = fileData.sha;
-    }
-    
-    // Create or update file
-    const updateResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `token ${token}`,
-        'Accept': 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        message: 'Update database',
-        content: content,
-        sha: sha,
-      }),
-    });
-    
-    if (!updateResponse.ok) {
-      throw new Error(`GitHub API error: ${updateResponse.statusText}`);
-    }
-    
-    console.log('Database synced to GitHub');
-  } catch (error) {
-    console.error('GitHub sync error:', error);
-    throw error;
-  }
 }
 
 export async function getUser(id: string): Promise<User | undefined> {
@@ -476,4 +489,173 @@ export async function createTransaction(senderId: string, receiverId: string | n
   db.transactions.push(newTransaction);
   await writeDB(db);
   return newTransaction;
+}
+
+// MiniApp Functions
+export async function getMiniApps(includePrivate: boolean = false): Promise<MiniApp[]> {
+  const db = await readDB();
+  if (includePrivate) {
+    return db.miniApps.sort((a, b) => b.downloads - a.downloads);
+  }
+  return db.miniApps.filter((m) => m.isPublic).sort((a, b) => b.downloads - a.downloads);
+}
+
+export async function getMiniAppById(id: string): Promise<MiniApp | undefined> {
+  const db = await readDB();
+  return db.miniApps.find((m) => m.id === id);
+}
+
+export async function getUserMiniApps(userId: string): Promise<MiniApp[]> {
+  const db = await readDB();
+  const installedIds = db.userInstalledMiniApps
+    .filter((u) => u.userId === userId)
+    .map((u) => u.miniAppId);
+  return db.miniApps.filter((m) => installedIds.includes(m.id));
+}
+
+export async function getUserCreatedMiniApps(userId: string): Promise<MiniApp[]> {
+  const db = await readDB();
+  return db.miniApps.filter((m) => m.authorId === userId);
+}
+
+export async function createMiniApp(miniApp: Omit<MiniApp, 'id' | 'downloads' | 'createdAt' | 'updatedAt'>): Promise<MiniApp> {
+  const db = await readDB();
+  
+  const newMiniApp: MiniApp = {
+    ...miniApp,
+    id: crypto.randomUUID(),
+    downloads: 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  
+  db.miniApps.push(newMiniApp);
+  await writeDB(db);
+  return newMiniApp;
+}
+
+export async function updateMiniApp(id: string, updates: Partial<Omit<MiniApp, 'id' | 'authorId' | 'createdAt'>>): Promise<MiniApp | null> {
+  const db = await readDB();
+  const index = db.miniApps.findIndex((m) => m.id === id);
+  
+  if (index === -1) return null;
+  
+  db.miniApps[index] = {
+    ...db.miniApps[index],
+    ...updates,
+    updatedAt: new Date().toISOString(),
+  };
+  
+  await writeDB(db);
+  return db.miniApps[index];
+}
+
+export async function deleteMiniApp(id: string, authorId: string): Promise<boolean> {
+  const db = await readDB();
+  const index = db.miniApps.findIndex((m) => m.id === id && m.authorId === authorId);
+  
+  if (index === -1) return false;
+  
+  db.miniApps.splice(index, 1);
+  
+  // Also remove all installations
+  db.userInstalledMiniApps = db.userInstalledMiniApps.filter((u) => u.miniAppId !== id);
+  
+  await writeDB(db);
+  return true;
+}
+
+export async function installMiniApp(userId: string, miniAppId: string): Promise<UserInstalledMiniApp | null> {
+  const db = await readDB();
+  
+  // Check if already installed
+  const existing = db.userInstalledMiniApps.find((u) => u.userId === userId && u.miniAppId === miniAppId);
+  if (existing) return null;
+  
+  const installation: UserInstalledMiniApp = {
+    id: crypto.randomUUID(),
+    userId,
+    miniAppId,
+    installedAt: new Date().toISOString(),
+  };
+  
+  db.userInstalledMiniApps.push(installation);
+  
+  // Increment download count
+  const miniAppIndex = db.miniApps.findIndex((m) => m.id === miniAppId);
+  if (miniAppIndex !== -1) {
+    db.miniApps[miniAppIndex].downloads += 1;
+  }
+  
+  await writeDB(db);
+  return installation;
+}
+
+export async function uninstallMiniApp(userId: string, miniAppId: string): Promise<boolean> {
+  const db = await readDB();
+  const index = db.userInstalledMiniApps.findIndex((u) => u.userId === userId && u.miniAppId === miniAppId);
+
+  if (index === -1) return false;
+
+  db.userInstalledMiniApps.splice(index, 1);
+  await writeDB(db);
+  return true;
+}
+
+// Variable State Functions
+export async function getVariableState(userId: string, miniAppId: string, variableId: string): Promise<number> {
+  const db = await readDB();
+  const state = db.miniAppVariableStates.find(
+    (s) => s.userId === userId && s.miniAppId === miniAppId && s.variableId === variableId
+  );
+  return state?.value ?? 0;
+}
+
+export async function setVariableState(userId: string, miniAppId: string, variableId: string, value: number): Promise<void> {
+  const db = await readDB();
+  const index = db.miniAppVariableStates.findIndex(
+    (s) => s.userId === userId && s.miniAppId === miniAppId && s.variableId === variableId
+  );
+
+  if (index !== -1) {
+    db.miniAppVariableStates[index].value = value;
+    db.miniAppVariableStates[index].updatedAt = new Date().toISOString();
+  } else {
+    db.miniAppVariableStates.push({
+      id: crypto.randomUUID(),
+      userId,
+      miniAppId,
+      variableId,
+      value,
+      updatedAt: new Date().toISOString(),
+    });
+  }
+
+  await writeDB(db);
+}
+
+export async function incrementVariable(userId: string, miniAppId: string, variableId: string, amount: number): Promise<number> {
+  const db = await readDB();
+  const index = db.miniAppVariableStates.findIndex(
+    (s) => s.userId === userId && s.miniAppId === miniAppId && s.variableId === variableId
+  );
+
+  let newValue = amount;
+  if (index !== -1) {
+    db.miniAppVariableStates[index].value += amount;
+    newValue = db.miniAppVariableStates[index].value;
+    db.miniAppVariableStates[index].updatedAt = new Date().toISOString();
+  } else {
+    db.miniAppVariableStates.push({
+      id: crypto.randomUUID(),
+      userId,
+      miniAppId,
+      variableId,
+      value: amount,
+      updatedAt: new Date().toISOString(),
+    });
+  }
+
+  await writeDB(db);
+  return newValue;
 }

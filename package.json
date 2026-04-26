@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
+    "@xyflow/react": "^12.10.2",
     "autoprefixer": "^10.4.21",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",

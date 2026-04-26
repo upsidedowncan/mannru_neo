@@ -5,7 +5,7 @@
       "username": "mannru",
       "fullName": "Ахмед",
       "passwordHash": "$2b$10$jeorECT4F8LWSIr0BEtzS.uP/2KeYdlTGH1q7bwqHBtrRxpltQoZG",
-      "balance": 4500,
+      "balance": 7504,
       "createdAt": "2026-04-21T10:38:42.893Z"
     },
     {
@@ -85,6 +85,146 @@
       "status": "completed",
       "timestamp": "2026-04-23T13:44:45.193Z",
       "description": "Приветственный бонус Mannru"
+    },
+    {
+      "id": "67507773-079a-4abb-8a46-c5d81a7f82b0",
+      "senderId": "system",
+      "receiverId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "amount": 100,
+      "type": "deposit",
+      "status": "completed",
+      "timestamp": "2026-04-25T18:03:42.454Z",
+      "description": "Мини-приложение: Добавление средств"
+    },
+    {
+      "id": "791fc00d-5895-4f7c-b969-7dc7d991f1d0",
+      "senderId": "system",
+      "receiverId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "amount": 100,
+      "type": "deposit",
+      "status": "completed",
+      "timestamp": "2026-04-25T18:09:31.342Z",
+      "description": "Мини-приложение: Добавление средств"
+    },
+    {
+      "id": "64a28c5f-c185-4010-a079-5b3f885e1e42",
+      "senderId": "system",
+      "receiverId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "amount": 100,
+      "type": "deposit",
+      "status": "completed",
+      "timestamp": "2026-04-25T18:09:33.157Z",
+      "description": "Мини-приложение: Добавление средств"
+    },
+    {
+      "id": "8580f5c7-a665-4b09-b083-66ea35f2ee01",
+      "senderId": "system",
+      "receiverId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "amount": 100,
+      "type": "deposit",
+      "status": "completed",
+      "timestamp": "2026-04-25T18:09:46.993Z",
+      "description": "Мини-приложение: Добавление средств"
+    },
+    {
+      "id": "f143171d-2754-4bd0-b610-5cf1403259d9",
+      "senderId": "system",
+      "receiverId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "amount": 100,
+      "type": "deposit",
+      "status": "completed",
+      "timestamp": "2026-04-25T19:34:36.160Z",
+      "description": "Мини-приложение: Добавление средств"
+    },
+    {
+      "id": "c91c0cc4-8bb6-437b-96f3-b31e8de5732e",
+      "senderId": "system",
+      "receiverId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "amount": 100,
+      "type": "deposit",
+      "status": "completed",
+      "timestamp": "2026-04-25T19:34:37.671Z",
+      "description": "Мини-приложение: Добавление средств"
+    },
+    {
+      "id": "9a8aeef5-bc7f-4439-b957-ee86440661f6",
+      "senderId": "system",
+      "receiverId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "amount": 100,
+      "type": "deposit",
+      "status": "completed",
+      "timestamp": "2026-04-25T19:38:23.182Z",
+      "description": "Мини-приложение: Добавление средств"
+    },
+    {
+      "id": "77b8c2f7-cf8b-4f6a-b799-a8834fc30c9a",
+      "senderId": "system",
+      "receiverId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "amount": 100,
+      "type": "deposit",
+      "status": "completed",
+      "timestamp": "2026-04-25T19:40:52.122Z",
+      "description": "Мини-приложение: Добавление средств"
+    },
+    {
+      "id": "11af9baf-2fc8-4b8f-a78b-d5069da51082",
+      "senderId": "system",
+      "receiverId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "amount": 100,
+      "type": "deposit",
+      "status": "completed",
+      "timestamp": "2026-04-25T19:40:53.572Z",
+      "description": "Мини-приложение: Добавление средств"
+    },
+    {
+      "id": "75c7fb9c-fc79-4d45-81c8-20c682dafe9e",
+      "senderId": "system",
+      "receiverId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "amount": 77,
+      "type": "deposit",
+      "status": "completed",
+      "timestamp": "2026-04-26T08:18:12.669Z",
+      "description": "Мини-приложение: Добавление средств"
+    },
+    {
+      "id": "7a15002a-c851-484c-bf37-4a7b50564c15",
+      "senderId": "system",
+      "receiverId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "amount": 77,
+      "type": "deposit",
+      "status": "completed",
+      "timestamp": "2026-04-26T08:18:12.895Z",
+      "description": "Мини-приложение: Добавление средств"
+    },
+    {
+      "id": "2b2f920a-763b-4084-ba3f-8669d658a78d",
+      "senderId": "system",
+      "receiverId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "amount": 1000,
+      "type": "deposit",
+      "status": "completed",
+      "timestamp": "2026-04-26T08:18:42.391Z",
+      "description": "Мини-приложение: Добавление средств"
+    },
+    {
+      "id": "4dd2b4f7-8f70-4474-96a4-b8ae10b0a653",
+      "senderId": "system",
+      "receiverId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "amount": 1000,
+      "type": "deposit",
+      "status": "completed",
+      "timestamp": "2026-04-26T08:18:42.674Z",
+      "description": "Мини-приложение: Добавление средств"
+    },
+    {
+      "id": "a5887b7e-343a-4198-8695-aedd84e38a7b",
+      "senderId": "system",
+      "receiverId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "amount": 50,
+      "type": "deposit",
+      "status": "completed",
+      "timestamp": "2026-04-26T09:07:51.304Z",
+      "description": "Мини-приложение: Добавление средств"
     }
   ],
   "notifications": [
@@ -147,6 +287,76 @@
       "id": "e6eefa3f-5c9c-4aaa-9fc5-615ca38f0c9b",
       "timestamp": "2026-04-21T11:25:26.918Z",
       "read": false
+    },
+    {
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "type": "deposit",
+      "title": "Средства добавлены",
+      "message": "Мини-приложение добавило 100 МР на ваш счет",
+      "amount": 100,
+      "id": "5723eee6-d4d8-48e0-8c64-861f42443590",
+      "timestamp": "2026-04-25T18:03:42.458Z",
+      "read": false
+    },
+    {
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "type": "deposit",
+      "title": "Средства добавлены",
+      "message": "Мини-приложение добавило 100 МР на ваш счет",
+      "amount": 100,
+      "id": "31633c6d-704b-469f-8ea0-848d91c54cd4",
+      "timestamp": "2026-04-25T18:09:31.347Z",
+      "read": false
+    },
+    {
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "type": "deposit",
+      "title": "Средства добавлены",
+      "message": "Мини-приложение добавило 100 МР на ваш счет",
+      "amount": 100,
+      "id": "c742d32d-cf65-4ff2-9bf8-a204c008d0d3",
+      "timestamp": "2026-04-25T18:09:33.193Z",
+      "read": false
+    },
+    {
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "type": "deposit",
+      "title": "Средства добавлены",
+      "message": "Мини-приложение добавило 100 МР на ваш счет",
+      "amount": 100,
+      "id": "c303043c-3f5f-447c-9666-c3066223de79",
+      "timestamp": "2026-04-25T18:09:47.018Z",
+      "read": false
+    },
+    {
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "type": "deposit",
+      "title": "Средства добавлены",
+      "message": "Мини-приложение добавило 100 МР на ваш счет",
+      "amount": 100,
+      "id": "b58d3f54-a278-4a91-91df-87de0f89364b",
+      "timestamp": "2026-04-25T19:34:36.173Z",
+      "read": false
+    },
+    {
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "type": "deposit",
+      "title": "Средства добавлены",
+      "message": "Мини-приложение добавило 100 МР на ваш счет",
+      "amount": 100,
+      "id": "de379251-f42c-4ef4-a1e9-35f5bc844488",
+      "timestamp": "2026-04-25T19:34:37.684Z",
+      "read": false
+    },
+    {
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "type": "deposit",
+      "title": "Средства добавлены",
+      "message": "Мини-приложение добавило 100 МР на ваш счет",
+      "amount": 100,
+      "id": "93ecb5aa-bbfc-4e42-8551-4f101c8317f7",
+      "timestamp": "2026-04-25T19:38:23.187Z",
+      "read": true
     }
   ],
   "cards": [
@@ -317,6 +527,1264 @@
       "isUsed": false,
       "expiresAt": "2026-04-21T15:12:39.114Z",
       "createdAt": "2026-04-21T15:07:39.116Z"
+    },
+    {
+      "id": "d1e87e65-1531-4172-b857-2ff528515b30",
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "code": "😚😯�😲😦",
+      "amount": 500,
+      "senderUsername": "mannru",
+      "isUsed": false,
+      "expiresAt": "2026-04-25T17:58:35.873Z",
+      "createdAt": "2026-04-25T17:53:35.873Z"
+    }
+  ],
+  "miniApps": [
+    {
+      "name": "test",
+      "description": "test",
+      "authorId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "authorUsername": "unknown",
+      "components": [
+        {
+          "id": "fsttk",
+          "type": "text",
+          "props": {
+            "content": "",
+            "size": "large",
+            "align": "center",
+            "showVariable": true,
+            "variableId": "shd6qk",
+            "variableFormat": "{value}"
+          },
+          "order": 0
+        },
+        {
+          "id": "qsergek",
+          "type": "button",
+          "props": {
+            "label": "1",
+            "action": "addMoney",
+            "amount": 100,
+            "variant": "primary",
+            "icon": "plus",
+            "silent": true
+          },
+          "order": 1
+        }
+      ],
+      "variables": [
+        {
+          "id": "shd6qk",
+          "name": "money",
+          "defaultValue": 0
+        }
+      ],
+      "isPublic": false,
+      "id": "ff1d3efb-cc12-44ab-91ee-d50c244639dd",
+      "downloads": 0,
+      "createdAt": "2026-04-25T19:40:44.867Z",
+      "updatedAt": "2026-04-25T19:40:44.867Z"
+    },
+    {
+      "name": "test",
+      "description": "test",
+      "authorId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "authorUsername": "unknown",
+      "components": [
+        {
+          "id": "1vv3wj",
+          "type": "text",
+          "props": {
+            "content": "",
+            "size": "medium",
+            "align": "left",
+            "showVariable": true,
+            "variableId": "gnkcfp",
+            "variableFormat": "{value}"
+          },
+          "order": 0
+        },
+        {
+          "id": "7jwp6h",
+          "type": "button",
+          "props": {
+            "label": "{addmoney}",
+            "action": "addMoney",
+            "amount": 100,
+            "variant": "primary",
+            "icon": "plus",
+            "silent": true
+          },
+          "order": 1
+        },
+        {
+          "id": "hedn8u",
+          "type": "button",
+          "props": {
+            "label": "Export",
+            "action": "addMoney",
+            "amount": 100,
+            "variant": "primary",
+            "icon": "dollar",
+            "silent": false
+          },
+          "order": 2
+        },
+        {
+          "id": "swk256",
+          "type": "button",
+          "props": {
+            "label": "Reset",
+            "action": "addMoney",
+            "amount": 100,
+            "variant": "primary",
+            "icon": "minus",
+            "silent": false
+          },
+          "order": 3
+        },
+        {
+          "id": "l276dk",
+          "type": "button",
+          "props": {
+            "label": "1 addmoney",
+            "action": "addMoney",
+            "amount": 100,
+            "variant": "primary",
+            "icon": "plus",
+            "silent": true
+          },
+          "order": 4
+        }
+      ],
+      "variables": [
+        {
+          "id": "gnkcfp",
+          "name": "money",
+          "defaultValue": 0
+        },
+        {
+          "id": "m0ug3c",
+          "name": "addmoney",
+          "defaultValue": 1
+        }
+      ],
+      "nodes": [
+        {
+          "id": "eg13qb",
+          "type": "buttonClick",
+          "x": 63.091592981712125,
+          "y": 109.16516491241597,
+          "data": {
+            "componentId": "7jwp6h",
+            "type": "buttonClick",
+            "nodeId": "eg13qb",
+            "variables": [
+              {
+                "id": "gnkcfp",
+                "name": "money",
+                "defaultValue": 0
+              },
+              {
+                "id": "m0ug3c",
+                "name": "addmoney",
+                "defaultValue": 1
+              }
+            ],
+            "components": [
+              {
+                "id": "1vv3wj",
+                "type": "text",
+                "props": {
+                  "content": "",
+                  "size": "medium",
+                  "align": "left",
+                  "showVariable": true,
+                  "variableId": "gnkcfp",
+                  "variableFormat": "{value}"
+                },
+                "order": 0
+              },
+              {
+                "id": "7jwp6h",
+                "type": "button",
+                "props": {
+                  "label": "{addmoney}",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "plus",
+                  "silent": true
+                },
+                "order": 1
+              },
+              {
+                "id": "hedn8u",
+                "type": "button",
+                "props": {
+                  "label": "Export",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "dollar",
+                  "silent": false
+                },
+                "order": 2
+              },
+              {
+                "id": "swk256",
+                "type": "button",
+                "props": {
+                  "label": "Reset",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "minus",
+                  "silent": false
+                },
+                "order": 3
+              },
+              {
+                "id": "l276dk",
+                "type": "button",
+                "props": {
+                  "label": "1 addmoney",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "plus",
+                  "silent": true
+                },
+                "order": 4
+              }
+            ]
+          }
+        },
+        {
+          "id": "tr4ho",
+          "type": "incrementVar",
+          "x": 430.83483508758405,
+          "y": 88.594031578922,
+          "data": {
+            "variableId": "gnkcfp",
+            "amount": "{addmoney}",
+            "type": "incrementVar",
+            "nodeId": "tr4ho",
+            "variables": [
+              {
+                "id": "gnkcfp",
+                "name": "money",
+                "defaultValue": 0
+              },
+              {
+                "id": "m0ug3c",
+                "name": "addmoney",
+                "defaultValue": 1
+              }
+            ],
+            "components": [
+              {
+                "id": "1vv3wj",
+                "type": "text",
+                "props": {
+                  "content": "",
+                  "size": "medium",
+                  "align": "left",
+                  "showVariable": true,
+                  "variableId": "gnkcfp",
+                  "variableFormat": "{value}"
+                },
+                "order": 0
+              },
+              {
+                "id": "7jwp6h",
+                "type": "button",
+                "props": {
+                  "label": "{addmoney}",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "plus",
+                  "silent": true
+                },
+                "order": 1
+              },
+              {
+                "id": "hedn8u",
+                "type": "button",
+                "props": {
+                  "label": "Export",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "dollar",
+                  "silent": false
+                },
+                "order": 2
+              },
+              {
+                "id": "swk256",
+                "type": "button",
+                "props": {
+                  "label": "Reset",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "minus",
+                  "silent": false
+                },
+                "order": 3
+              },
+              {
+                "id": "l276dk",
+                "type": "button",
+                "props": {
+                  "label": "1 addmoney",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "plus",
+                  "silent": true
+                },
+                "order": 4
+              }
+            ]
+          }
+        },
+        {
+          "id": "ksqge",
+          "type": "buttonClick",
+          "x": 13.436042102016444,
+          "y": 299.46967017516795,
+          "data": {
+            "componentId": "hedn8u",
+            "type": "buttonClick",
+            "nodeId": "ksqge",
+            "variables": [
+              {
+                "id": "gnkcfp",
+                "name": "money",
+                "defaultValue": 0
+              },
+              {
+                "id": "m0ug3c",
+                "name": "addmoney",
+                "defaultValue": 1
+              }
+            ],
+            "components": [
+              {
+                "id": "1vv3wj",
+                "type": "text",
+                "props": {
+                  "content": "",
+                  "size": "medium",
+                  "align": "left",
+                  "showVariable": true,
+                  "variableId": "gnkcfp",
+                  "variableFormat": "{value}"
+                },
+                "order": 0
+              },
+              {
+                "id": "7jwp6h",
+                "type": "button",
+                "props": {
+                  "label": "{addmoney}",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "plus",
+                  "silent": true
+                },
+                "order": 1
+              },
+              {
+                "id": "hedn8u",
+                "type": "button",
+                "props": {
+                  "label": "Export",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "dollar",
+                  "silent": false
+                },
+                "order": 2
+              },
+              {
+                "id": "swk256",
+                "type": "button",
+                "props": {
+                  "label": "Reset",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "minus",
+                  "silent": false
+                },
+                "order": 3
+              },
+              {
+                "id": "l276dk",
+                "type": "button",
+                "props": {
+                  "label": "1 addmoney",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "plus",
+                  "silent": true
+                },
+                "order": 4
+              }
+            ]
+          }
+        },
+        {
+          "id": "s2x599",
+          "type": "addMoney",
+          "x": 412,
+          "y": 313,
+          "data": {
+            "amount": "{money}",
+            "type": "addMoney",
+            "nodeId": "s2x599",
+            "variables": [
+              {
+                "id": "gnkcfp",
+                "name": "money",
+                "defaultValue": 0
+              },
+              {
+                "id": "m0ug3c",
+                "name": "addmoney",
+                "defaultValue": 1
+              }
+            ],
+            "components": [
+              {
+                "id": "1vv3wj",
+                "type": "text",
+                "props": {
+                  "content": "",
+                  "size": "medium",
+                  "align": "left",
+                  "showVariable": true,
+                  "variableId": "gnkcfp",
+                  "variableFormat": "{value}"
+                },
+                "order": 0
+              },
+              {
+                "id": "7jwp6h",
+                "type": "button",
+                "props": {
+                  "label": "{addmoney}",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "plus",
+                  "silent": true
+                },
+                "order": 1
+              },
+              {
+                "id": "hedn8u",
+                "type": "button",
+                "props": {
+                  "label": "Export",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "dollar",
+                  "silent": false
+                },
+                "order": 2
+              },
+              {
+                "id": "swk256",
+                "type": "button",
+                "props": {
+                  "label": "Reset",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "minus",
+                  "silent": false
+                },
+                "order": 3
+              },
+              {
+                "id": "l276dk",
+                "type": "button",
+                "props": {
+                  "label": "1 addmoney",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "plus",
+                  "silent": true
+                },
+                "order": 4
+              }
+            ]
+          }
+        },
+        {
+          "id": "tprbsb",
+          "type": "buttonClick",
+          "x": 66.39999999999998,
+          "y": 495.99999999999994,
+          "data": {
+            "componentId": "swk256",
+            "type": "buttonClick",
+            "nodeId": "tprbsb",
+            "variables": [
+              {
+                "id": "gnkcfp",
+                "name": "money",
+                "defaultValue": 0
+              },
+              {
+                "id": "m0ug3c",
+                "name": "addmoney",
+                "defaultValue": 1
+              }
+            ],
+            "components": [
+              {
+                "id": "1vv3wj",
+                "type": "text",
+                "props": {
+                  "content": "",
+                  "size": "medium",
+                  "align": "left",
+                  "showVariable": true,
+                  "variableId": "gnkcfp",
+                  "variableFormat": "{value}"
+                },
+                "order": 0
+              },
+              {
+                "id": "7jwp6h",
+                "type": "button",
+                "props": {
+                  "label": "{addmoney}",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "plus",
+                  "silent": true
+                },
+                "order": 1
+              },
+              {
+                "id": "hedn8u",
+                "type": "button",
+                "props": {
+                  "label": "Export",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "dollar",
+                  "silent": false
+                },
+                "order": 2
+              },
+              {
+                "id": "swk256",
+                "type": "button",
+                "props": {
+                  "label": "Reset",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "minus",
+                  "silent": false
+                },
+                "order": 3
+              },
+              {
+                "id": "l276dk",
+                "type": "button",
+                "props": {
+                  "label": "1 addmoney",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "plus",
+                  "silent": true
+                },
+                "order": 4
+              }
+            ]
+          }
+        },
+        {
+          "id": "k5jde6",
+          "type": "setVar",
+          "x": 357.53465609335564,
+          "y": 471.5479859981231,
+          "data": {
+            "variableId": "gnkcfp",
+            "type": "setVar",
+            "nodeId": "k5jde6",
+            "variables": [
+              {
+                "id": "gnkcfp",
+                "name": "money",
+                "defaultValue": 0
+              },
+              {
+                "id": "m0ug3c",
+                "name": "addmoney",
+                "defaultValue": 1
+              }
+            ],
+            "components": [
+              {
+                "id": "1vv3wj",
+                "type": "text",
+                "props": {
+                  "content": "",
+                  "size": "medium",
+                  "align": "left",
+                  "showVariable": true,
+                  "variableId": "gnkcfp",
+                  "variableFormat": "{value}"
+                },
+                "order": 0
+              },
+              {
+                "id": "7jwp6h",
+                "type": "button",
+                "props": {
+                  "label": "{addmoney}",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "plus",
+                  "silent": true
+                },
+                "order": 1
+              },
+              {
+                "id": "hedn8u",
+                "type": "button",
+                "props": {
+                  "label": "Export",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "dollar",
+                  "silent": false
+                },
+                "order": 2
+              },
+              {
+                "id": "swk256",
+                "type": "button",
+                "props": {
+                  "label": "Reset",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "minus",
+                  "silent": false
+                },
+                "order": 3
+              },
+              {
+                "id": "l276dk",
+                "type": "button",
+                "props": {
+                  "label": "1 addmoney",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "plus",
+                  "silent": true
+                },
+                "order": 4
+              }
+            ]
+          }
+        },
+        {
+          "id": "hd09qt",
+          "type": "buttonClick",
+          "x": 19.34038255129329,
+          "y": 707.5490540088073,
+          "data": {
+            "type": "buttonClick",
+            "nodeId": "hd09qt",
+            "variables": [
+              {
+                "id": "gnkcfp",
+                "name": "money",
+                "defaultValue": 0
+              },
+              {
+                "id": "m0ug3c",
+                "name": "addmoney",
+                "defaultValue": 1
+              }
+            ],
+            "components": [
+              {
+                "id": "1vv3wj",
+                "type": "text",
+                "props": {
+                  "content": "",
+                  "size": "medium",
+                  "align": "left",
+                  "showVariable": true,
+                  "variableId": "gnkcfp",
+                  "variableFormat": "{value}"
+                },
+                "order": 0
+              },
+              {
+                "id": "7jwp6h",
+                "type": "button",
+                "props": {
+                  "label": "{addmoney}",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "plus",
+                  "silent": true
+                },
+                "order": 1
+              },
+              {
+                "id": "hedn8u",
+                "type": "button",
+                "props": {
+                  "label": "Export",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "dollar",
+                  "silent": false
+                },
+                "order": 2
+              },
+              {
+                "id": "swk256",
+                "type": "button",
+                "props": {
+                  "label": "Reset",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "minus",
+                  "silent": false
+                },
+                "order": 3
+              },
+              {
+                "id": "l276dk",
+                "type": "button",
+                "props": {
+                  "label": "1 addmoney",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "plus",
+                  "silent": true
+                },
+                "order": 4
+              }
+            ],
+            "componentId": "l276dk"
+          }
+        },
+        {
+          "id": "p5xra",
+          "type": "incrementVar",
+          "x": 354.9884680636535,
+          "y": 702.9956885076704,
+          "data": {
+            "type": "incrementVar",
+            "nodeId": "p5xra",
+            "variables": [
+              {
+                "id": "gnkcfp",
+                "name": "money",
+                "defaultValue": 0
+              },
+              {
+                "id": "m0ug3c",
+                "name": "addmoney",
+                "defaultValue": 1
+              }
+            ],
+            "components": [
+              {
+                "id": "1vv3wj",
+                "type": "text",
+                "props": {
+                  "content": "",
+                  "size": "medium",
+                  "align": "left",
+                  "showVariable": true,
+                  "variableId": "gnkcfp",
+                  "variableFormat": "{value}"
+                },
+                "order": 0
+              },
+              {
+                "id": "7jwp6h",
+                "type": "button",
+                "props": {
+                  "label": "{addmoney}",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "plus",
+                  "silent": true
+                },
+                "order": 1
+              },
+              {
+                "id": "hedn8u",
+                "type": "button",
+                "props": {
+                  "label": "Export",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "dollar",
+                  "silent": false
+                },
+                "order": 2
+              },
+              {
+                "id": "swk256",
+                "type": "button",
+                "props": {
+                  "label": "Reset",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "minus",
+                  "silent": false
+                },
+                "order": 3
+              },
+              {
+                "id": "l276dk",
+                "type": "button",
+                "props": {
+                  "label": "1 addmoney",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "plus",
+                  "silent": true
+                },
+                "order": 4
+              }
+            ],
+            "variableId": "m0ug3c"
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "edge-1777147154254",
+          "sourceNodeId": "eg13qb",
+          "targetNodeId": "tr4ho",
+          "sourcePortId": "trigger",
+          "targetPortId": "input"
+        },
+        {
+          "id": "edge-1777147997997",
+          "sourceNodeId": "ksqge",
+          "targetNodeId": "s2x599",
+          "sourcePortId": "trigger",
+          "targetPortId": "input"
+        },
+        {
+          "id": "edge-1777148182274",
+          "sourceNodeId": "tprbsb",
+          "targetNodeId": "k5jde6",
+          "sourcePortId": "trigger",
+          "targetPortId": "input"
+        },
+        {
+          "id": "xy-edge__eg13qb-tr4ho",
+          "sourceNodeId": "eg13qb",
+          "targetNodeId": "tr4ho"
+        },
+        {
+          "id": "xy-edge__ksqge-s2x599",
+          "sourceNodeId": "ksqge",
+          "targetNodeId": "s2x599"
+        },
+        {
+          "id": "xy-edge__tprbsb-k5jde6",
+          "sourceNodeId": "tprbsb",
+          "targetNodeId": "k5jde6"
+        },
+        {
+          "id": "xy-edge__hd09qt-p5xra",
+          "sourceNodeId": "hd09qt",
+          "targetNodeId": "p5xra"
+        }
+      ],
+      "isPublic": false,
+      "id": "0c0455fc-8c30-4f61-acfe-1ef711a8c71e",
+      "downloads": 0,
+      "createdAt": "2026-04-25T19:59:20.340Z",
+      "updatedAt": "2026-04-26T08:16:59.918Z"
+    },
+    {
+      "name": "clicker",
+      "description": "clicker",
+      "authorId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "authorUsername": "unknown",
+      "components": [
+        {
+          "id": "x0k1t",
+          "type": "text",
+          "props": {
+            "content": "",
+            "size": "large",
+            "align": "center",
+            "showVariable": true,
+            "variableId": "l08u7k",
+            "variableFormat": "{value}"
+          },
+          "order": 0
+        },
+        {
+          "id": "c4ix3c",
+          "type": "button",
+          "props": {
+            "label": "1",
+            "action": "addMoney",
+            "amount": 100,
+            "variant": "primary",
+            "icon": "plus",
+            "silent": true
+          },
+          "order": 1
+        },
+        {
+          "id": "lqfii9",
+          "type": "button",
+          "props": {
+            "label": "Вывести",
+            "action": "addMoney",
+            "amount": 100,
+            "variant": "secondary",
+            "icon": "dollar",
+            "silent": false
+          },
+          "order": 2
+        }
+      ],
+      "variables": [
+        {
+          "id": "l08u7k",
+          "name": "money",
+          "defaultValue": 0
+        }
+      ],
+      "nodes": [
+        {
+          "id": "y54yy8",
+          "type": "buttonClick",
+          "x": 24.726770896139016,
+          "y": 21.634668692539805,
+          "data": {
+            "type": "buttonClick",
+            "nodeId": "y54yy8",
+            "variables": [
+              {
+                "id": "l08u7k",
+                "name": "money",
+                "defaultValue": 0
+              }
+            ],
+            "components": [
+              {
+                "id": "x0k1t",
+                "type": "text",
+                "props": {
+                  "content": "",
+                  "size": "large",
+                  "align": "center",
+                  "showVariable": true,
+                  "variableId": "l08u7k",
+                  "variableFormat": "{value}"
+                },
+                "order": 0
+              },
+              {
+                "id": "c4ix3c",
+                "type": "button",
+                "props": {
+                  "label": "1",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "plus",
+                  "silent": true
+                },
+                "order": 1
+              },
+              {
+                "id": "lqfii9",
+                "type": "button",
+                "props": {
+                  "label": "Вывести",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "secondary",
+                  "icon": "dollar",
+                  "silent": false
+                },
+                "order": 2
+              }
+            ],
+            "componentId": "c4ix3c"
+          }
+        },
+        {
+          "id": "qqr9ai",
+          "type": "incrementVar",
+          "x": 316.2893307190337,
+          "y": 6.274623355085403,
+          "data": {
+            "type": "incrementVar",
+            "nodeId": "qqr9ai",
+            "variables": [
+              {
+                "id": "l08u7k",
+                "name": "money",
+                "defaultValue": 0
+              }
+            ],
+            "components": [
+              {
+                "id": "x0k1t",
+                "type": "text",
+                "props": {
+                  "content": "",
+                  "size": "large",
+                  "align": "center",
+                  "showVariable": true,
+                  "variableId": "l08u7k",
+                  "variableFormat": "{value}"
+                },
+                "order": 0
+              },
+              {
+                "id": "c4ix3c",
+                "type": "button",
+                "props": {
+                  "label": "1",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "plus",
+                  "silent": true
+                },
+                "order": 1
+              },
+              {
+                "id": "lqfii9",
+                "type": "button",
+                "props": {
+                  "label": "Вывести",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "secondary",
+                  "icon": "dollar",
+                  "silent": false
+                },
+                "order": 2
+              }
+            ],
+            "variableId": "l08u7k"
+          }
+        },
+        {
+          "id": "35svbb",
+          "type": "buttonClick",
+          "x": 46.49019942016696,
+          "y": 202.90346265352514,
+          "data": {
+            "type": "buttonClick",
+            "nodeId": "35svbb",
+            "variables": [
+              {
+                "id": "l08u7k",
+                "name": "money",
+                "defaultValue": 0
+              }
+            ],
+            "components": [
+              {
+                "id": "x0k1t",
+                "type": "text",
+                "props": {
+                  "content": "",
+                  "size": "large",
+                  "align": "center",
+                  "showVariable": true,
+                  "variableId": "l08u7k",
+                  "variableFormat": "{value}"
+                },
+                "order": 0
+              },
+              {
+                "id": "c4ix3c",
+                "type": "button",
+                "props": {
+                  "label": "1",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "plus",
+                  "silent": true
+                },
+                "order": 1
+              },
+              {
+                "id": "lqfii9",
+                "type": "button",
+                "props": {
+                  "label": "Вывести",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "secondary",
+                  "icon": "dollar",
+                  "silent": false
+                },
+                "order": 2
+              }
+            ],
+            "componentId": "lqfii9"
+          }
+        },
+        {
+          "id": "ehkgx",
+          "type": "addMoney",
+          "x": 326.38761783775533,
+          "y": 205.84356158648302,
+          "data": {
+            "type": "addMoney",
+            "nodeId": "ehkgx",
+            "variables": [
+              {
+                "id": "l08u7k",
+                "name": "money",
+                "defaultValue": 0
+              }
+            ],
+            "components": [
+              {
+                "id": "x0k1t",
+                "type": "text",
+                "props": {
+                  "content": "",
+                  "size": "large",
+                  "align": "center",
+                  "showVariable": true,
+                  "variableId": "l08u7k",
+                  "variableFormat": "{value}"
+                },
+                "order": 0
+              },
+              {
+                "id": "c4ix3c",
+                "type": "button",
+                "props": {
+                  "label": "1",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "primary",
+                  "icon": "plus",
+                  "silent": true
+                },
+                "order": 1
+              },
+              {
+                "id": "lqfii9",
+                "type": "button",
+                "props": {
+                  "label": "Вывести",
+                  "action": "addMoney",
+                  "amount": 100,
+                  "variant": "secondary",
+                  "icon": "dollar",
+                  "silent": false
+                },
+                "order": 2
+              }
+            ],
+            "amount": "{money}"
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "xy-edge__y54yy8-qqr9ai",
+          "sourceNodeId": "y54yy8",
+          "targetNodeId": "qqr9ai"
+        },
+        {
+          "id": "xy-edge__35svbb-ehkgx",
+          "sourceNodeId": "35svbb",
+          "targetNodeId": "ehkgx"
+        }
+      ],
+      "isPublic": false,
+      "id": "0da372ed-b4a5-48ec-a782-1f4b4ddc8cbb",
+      "downloads": 0,
+      "createdAt": "2026-04-26T08:55:46.949Z",
+      "updatedAt": "2026-04-26T09:07:20.784Z"
+    }
+  ],
+  "userInstalledMiniApps": [],
+  "miniAppVariableStates": [
+    {
+      "id": "9dc0dbaa-01c3-481f-a009-42a4f426ec3e",
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "miniAppId": "5b9e0090-39d0-4080-a8b9-a33f4b1d9766",
+      "variableId": "4ejbos",
+      "value": 18,
+      "updatedAt": "2026-04-25T18:37:35.681Z"
+    },
+    {
+      "id": "41ee6379-a942-4548-96e7-c02f9b921051",
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "miniAppId": "9af18fbc-486e-4903-b134-6c26d5ad29bb",
+      "variableId": "oy7xoe",
+      "value": 1,
+      "updatedAt": "2026-04-25T18:26:37.314Z"
+    },
+    {
+      "id": "35fc4548-2e40-400a-a375-57449dd1110b",
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "miniAppId": "0c0455fc-8c30-4f61-acfe-1ef711a8c71e",
+      "variableId": "gnkcfp",
+      "value": 2,
+      "updatedAt": "2026-04-26T07:22:29.960Z"
+    },
+    {
+      "id": "01e157ee-d75e-4578-bf85-f6b373128ea1",
+      "userId": "75dfb138-6d85-4c79-a5df-28a0188ca62e",
+      "miniAppId": "0c0455fc-8c30-4f61-acfe-1ef711a8c71e",
+      "variableId": "m0ug3c",
+      "value": 1,
+      "updatedAt": "2026-04-25T20:12:23.158Z"
     }
   ]
 }

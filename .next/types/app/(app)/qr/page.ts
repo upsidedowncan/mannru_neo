@@ -1,4 +1,4 @@
-// File: /run/media/udc/Files/mannru_neo/app/(app)/qr/page.tsx
+// File: /home/deda/mannru_neo/app/(app)/qr/page.tsx
 import * as entry from '../../../../../app/(app)/qr/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

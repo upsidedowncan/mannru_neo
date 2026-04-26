@@ -1,11 +1,11 @@
 {
+  "/api/miniapps/route": "app/api/miniapps/route.js",
   "/api/user/route": "app/api/user/route.js",
-  "/api/wire-transfers/route": "app/api/wire-transfers/route.js",
-  "/api/cards/route": "app/api/cards/route.js",
-  "/(app)/profile/page": "app/(app)/profile/page.js",
+  "/(app)/miniapps/create/[[...id]]/page": "app/(app)/miniapps/create/[[...id]]/page.js",
   "/(app)/page": "app/(app)/page.js",
-  "/(app)/cards/page": "app/(app)/cards/page.js",
-  "/(app)/transfer/page": "app/(app)/transfer/page.js",
+  "/(app)/qr/page": "app/(app)/qr/page.js",
   "/(app)/history/page": "app/(app)/history/page.js",
-  "/(app)/qr/page": "app/(app)/qr/page.js"
+  "/(app)/transfer/page": "app/(app)/transfer/page.js",
+  "/(app)/profile/page": "app/(app)/profile/page.js",
+  "/(app)/cards/page": "app/(app)/cards/page.js"
 }
