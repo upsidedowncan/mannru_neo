@@ -1,5 +1,3 @@
 {
-  "/(app)/miniapps/marketplace/page": "app/(app)/miniapps/marketplace/page.js",
-  "/(app)/miniapps/run/[id]/page": "app/(app)/miniapps/run/[id]/page.js",
   "/(app)/miniapps/create/[[...id]]/page": "app/(app)/miniapps/create/[[...id]]/page.js"
 }

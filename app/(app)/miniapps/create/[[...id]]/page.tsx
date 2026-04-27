@@ -7,11 +7,13 @@ import {
   Settings, MousePointer, ArrowUp, ArrowDown, FileText, Calculator, 
   Image, Keyboard, ToggleRight, Sliders, CreditCard, Divide as DivideIcon, 
   User, Award, Clock, Shuffle, ExternalLink, FolderOpen, Save as SaveIcon, 
-  GitBranch, Scale, Play, Pause, RotateCcw, Loader2 
+  GitBranch, Scale, Play, Pause, RotateCcw, Loader2, Check 
 } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import { FastTransitionLink } from '@/components/fast-transition-link';
 import { Combobox } from '@/components/ui/combobox';
+import { Button } from '@/components/ui/button';
+import { Dialog } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import {
   ReactFlow,
@@ -100,6 +102,7 @@ export default function CreateMiniAppPage() {
   const [loading, setLoading] = useState(false);
   const [compilationLogs, setCompilationLogs] = useState<Array<{ type: 'info' | 'error' | 'success'; message: string }>>([]);
   const [showCompilationDialog, setShowCompilationDialog] = useState(false);
+  const [showSettingsDialog, setShowSettingsDialog] = useState(false);
 
   // Canvas
   const [canvasScale, setCanvasScale] = useState(0.8);
@@ -281,6 +284,32 @@ export default function CreateMiniAppPage() {
     finally { setSaving(false); setTimeout(() => setShowCompilationDialog(false), 2000); }
   };
 
+  const handlePreview = async () => {
+    const success = await compileNodes();
+    if (!success) return;
+    
+    setCompilationLogs(prev => [...prev, { type: 'info', message: 'Подготовка данных для предпросмотра...' }]);
+    
+    const persistedScreens = screens.map((screen) => 
+      screen.id === currentScreenId ? { ...screen, components, nodes: toOldNodes(flowNodes), edges: toOldEdges(flowEdges) } : screen
+    );
+
+    const previewData = {
+      id: 'preview',
+      name: name || 'Предпросмотр приложения',
+      description: description || 'Временная версия для тестирования',
+      variables,
+      screens: persistedScreens,
+      startScreenId: currentScreenId,
+      authorUsername: 'You',
+    };
+    
+    localStorage.setItem('miniapp_preview_data', JSON.stringify(previewData));
+    window.open('/miniapps/preview', '_blank');
+    
+    setTimeout(() => setShowCompilationDialog(false), 1500);
+  };
+
   const fetchMiniApp = async () => {
     setLoading(true);
     try {
@@ -460,17 +489,28 @@ export default function CreateMiniAppPage() {
   return (
     <div className={cn("fixed inset-0 flex flex-col font-sans bg-[#0c0c0e] overflow-hidden z-50 transition-all duration-300", sidebarCollapsed ? "md:pl-20" : "md:pl-24 lg:pl-72")}>
       {/* Header */}
-      <div className="flex items-center justify-between px-6 pt-8 pb-4 border-b border-mnr-border bg-[#18181b] flex-shrink-0">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-mnr-border bg-[#18181b] flex-shrink-0">
         <div className="flex items-center gap-4">
           <FastTransitionLink href="/miniapps/marketplace"><ArrowLeft className="h-6 w-6 text-mnr-text" /></FastTransitionLink>
-          <div className="text-[20px] font-bold uppercase text-mnr-text leading-none">{isEditing ? 'РЕДАКТИРОВАНИЕ' : 'СОЗДАНИЕ'} МИНИ-ПРИЛОЖЕНИЯ</div>
+          <div className="text-[20px] font-bold uppercase text-mnr-text leading-none tracking-[-1px]">{isEditing ? 'РЕДАКТИРОВАНИЕ' : 'СОЗДАНИЕ'} МИНИ-ПРИЛОЖЕНИЯ</div>
         </div>
         <div className="flex gap-4">
-          <div className="flex border-4 border-mnr-border">
-            <button onClick={() => setTab('visual')} className={cn("px-4 py-2 font-bold text-sm border-r-4 transition-all", tab === 'visual' ? "bg-mnr-accent text-black" : "text-mnr-text hover:bg-mnr-surface")}>ВИЗУАЛ</button>
+          <Button variant="outline" size="sm" onClick={() => setShowSettingsDialog(true)}>
+            <Settings className="h-4 w-4" />
+            НАСТРОЙКИ
+          </Button>
+          <div className="flex border border-mnr-border">
+            <button onClick={() => setTab('visual')} className={cn("px-4 py-2 font-bold text-sm border-r border-mnr-border transition-all", tab === 'visual' ? "bg-mnr-accent text-black" : "text-mnr-text hover:bg-mnr-surface")}>ВИЗУАЛ</button>
             <button onClick={() => setTab('nodes')} className={cn("px-4 py-2 font-bold text-sm transition-all", tab === 'nodes' ? "bg-mnr-accent text-black" : "text-mnr-text hover:bg-mnr-surface")}>УЗЛЫ</button>
           </div>
-          <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-4 py-2 bg-mnr-accent text-black border-4 border-mnr-accent font-bold transition-all hover:translate-x-[2px] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] disabled:opacity-50 active:shadow-none active:translate-y-[2px]"><Save className="h-5 w-5" />СОХРАНИТЬ</button>
+          <Button variant="outline" size="sm" onClick={handlePreview} disabled={saving}>
+            <Play className="h-4 w-4" />
+            ПРЕДПРОСМОТР
+          </Button>
+          <Button variant="default" size="sm" onClick={handleSave} disabled={saving}>
+            <Save className="h-4 w-4" />
+            {saving ? 'СОХРАНЕНИЕ...' : 'СОХРАНИТЬ'}
+          </Button>
         </div>
       </div>
 
@@ -585,30 +625,87 @@ export default function CreateMiniAppPage() {
 
       {showCompilationDialog && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-[#18181b] border-4 border-mnr-border w-full max-w-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col max-h-[80vh] animate-in zoom-in duration-200">
-            <div className="p-4 border-b-4 border-mnr-border flex items-center justify-between bg-mnr-surface font-bold uppercase text-xs tracking-tight">
+          <div className="bg-mnr-surface border border-mnr-border w-full max-w-lg shadow-2xl flex flex-col max-h-[80vh] animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-mnr-border flex items-center justify-between font-bold uppercase text-sm tracking-[-1px]">
               <div className="flex items-center gap-3">
-                {compiling ? <Loader2 className="h-5 w-5 animate-spin text-mnr-accent" /> : compilationLogs.some(l => l.type === 'error') ? <X className="h-5 w-5 text-mnr-error" /> : <Save className="h-5 w-5 text-mnr-success" />}
-                <span>{compiling ? 'Выполнение компиляции...' : 'Результат сборки'}</span>
+                {compiling ? <Loader2 className="h-5 w-5 animate-spin text-mnr-accent" /> : compilationLogs.some(l => l.type === 'error') ? <X className="h-5 w-5 text-mnr-error" /> : <Check className="h-5 w-5 text-mnr-accent" />}
+                <span>{compiling ? 'ВЫПОЛНЕНИЕ КОМПИЛЯЦИИ...' : 'РЕЗУЛЬТАТ СБОРКИ'}</span>
               </div>
-              {!compiling && <button onClick={() => setShowCompilationDialog(false)} className="p-1 hover:bg-mnr-border transition-all"><X className="h-5 w-5 text-mnr-text" /></button>}
+              {!compiling && <button onClick={() => setShowCompilationDialog(false)} className="text-mnr-muted hover:text-mnr-text transition-colors"><X className="h-5 w-5" /></button>}
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-2 font-mono text-[10px] bg-[#0c0c0e] custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-4 space-y-2 font-mono text-[11px] bg-[#0c0c0e]/50 custom-scrollbar">
               {compilationLogs.map((log, i) => (
-                <div key={i} className={cn("flex gap-2 items-start py-1 border-b border-mnr-border/10 last:border-none", log.type === 'error' ? "text-mnr-error" : log.type === 'success' ? "text-mnr-accent" : "text-mnr-muted")}>
+                <div key={i} className={cn("flex gap-2 items-start py-1 border-b border-mnr-border/5 last:border-none", log.type === 'error' ? "text-mnr-error" : log.type === 'success' ? "text-mnr-accent" : "text-mnr-muted")}>
                   <span className="opacity-40 whitespace-nowrap">[{new Date().toLocaleTimeString([], { hour12: false })}]</span>
                   <span className="flex-1 leading-relaxed">{log.message}</span>
                 </div>
               ))}
             </div>
             {!compiling && compilationLogs.some(l => l.type === 'error') && (
-              <div className="p-4 border-t-4 border-mnr-border bg-mnr-surface flex justify-end">
-                <button onClick={() => setShowCompilationDialog(false)} className="px-6 py-2 bg-mnr-error text-white font-bold border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all uppercase text-xs tracking-widest">ИСПРАВИТЬ ОШИБКИ</button>
+              <div className="px-6 py-4 border-t border-mnr-border flex justify-end">
+                <Button variant="danger" size="sm" onClick={() => setShowCompilationDialog(false)}>
+                  ИСПРАВИТЬ ОШИБКИ
+                </Button>
               </div>
             )}
           </div>
         </div>
       )}
+
+      <Dialog 
+        open={showSettingsDialog} 
+        onClose={() => setShowSettingsDialog(false)} 
+        title="Настройки приложения"
+        className="max-w-md"
+      >
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <label className="text-[12px] font-bold text-mnr-muted uppercase tracking-[1px]">Название</label>
+            <input 
+              type="text" 
+              value={name} 
+              onChange={(e) => setName(e.target.value)}
+              className="w-full bg-mnr-surface-hover border border-mnr-border p-3 text-mnr-text font-bold text-sm focus:border-mnr-accent outline-none transition-all placeholder:opacity-20"
+              placeholder="Введите название..."
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[12px] font-bold text-mnr-muted uppercase tracking-[1px]">Описание</label>
+            <textarea 
+              value={description} 
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full bg-mnr-surface-hover border border-mnr-border p-3 text-mnr-text font-bold text-sm min-h-[100px] focus:border-mnr-accent outline-none transition-all resize-none placeholder:opacity-20"
+              placeholder="О чем это приложение?"
+            />
+          </div>
+
+          <div className="flex items-center justify-between p-4 bg-mnr-surface-hover border border-mnr-border hover:border-mnr-accent transition-all cursor-pointer select-none" onClick={() => setIsPublic(!isPublic)}>
+            <div className="flex flex-col">
+              <span className="text-sm font-bold uppercase tracking-[-0.5px] text-mnr-text">Публичный доступ</span>
+              <span className="text-[11px] text-mnr-muted">Видно всем в маркетплейсе</span>
+            </div>
+            <div className={cn(
+              "w-12 h-6 rounded-full transition-all flex items-center px-1 border border-mnr-border",
+              isPublic ? "bg-mnr-accent" : "bg-mnr-surface"
+            )}>
+              <div className={cn(
+                "w-4 h-4 rounded-full transition-all shadow-sm",
+                isPublic ? "translate-x-6 bg-black" : "translate-x-0 bg-mnr-muted"
+              )} />
+            </div>
+          </div>
+
+          <div className="flex gap-4 pt-4">
+            <Button variant="ghost" className="flex-1" onClick={() => setShowSettingsDialog(false)}>
+              ОТМЕНА
+            </Button>
+            <Button variant="default" className="flex-1" onClick={() => setShowSettingsDialog(false)}>
+              ПРИМЕНИТЬ
+            </Button>
+          </div>
+        </div>
+      </Dialog>
 
       {tab === 'visual' && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#18181b] border-2 border-mnr-border shadow-2xl rounded-lg p-2 z-50 overflow-x-auto w-[500px] flex gap-2 no-scrollbar">

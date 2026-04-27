@@ -11,6 +11,12 @@
       "static/chunks/main-app.js",
       "static/chunks/app/(app)/layout.js"
     ],
+    "/(app)/miniapps/create/[[...id]]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(app)/miniapps/create/[[...id]]/page.css",
+      "static/chunks/app/(app)/miniapps/create/[[...id]]/page.js"
+    ],
     "/api/miniapps/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -20,27 +26,6 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/user/route.js"
-    ],
-    "/(app)/miniapps/marketplace/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(app)/miniapps/marketplace/page.js"
-    ],
-    "/(app)/miniapps/run/[id]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(app)/miniapps/run/[id]/page.js"
-    ],
-    "/api/miniapps/[id]/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/miniapps/[id]/route.js"
-    ],
-    "/(app)/miniapps/create/[[...id]]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/(app)/miniapps/create/[[...id]]/page.css",
-      "static/chunks/app/(app)/miniapps/create/[[...id]]/page.js"
     ]
   }
 }
