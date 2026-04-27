@@ -20,26 +20,39 @@ interface ComboboxProps {
 export function Combobox({ options, value, onChange, placeholder = 'Выберите...', className }: ComboboxProps) {
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const debug = process.env.NODE_ENV !== 'production';
 
   const selectedOption = options.find((opt) => opt.value === value);
 
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
+    function handlePointerDownOutside(event: MouseEvent) {
+      if (!ref.current) return;
+
+      const path = (event.composedPath && event.composedPath()) || [];
+      const clickedInside = path.includes(ref.current) || ref.current.contains(event.target as Node);
+
+      if (!clickedInside) {
+        if (debug) {
+          console.debug('[Combobox] outside close', { value });
+        }
         setIsOpen(false);
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', handlePointerDownOutside);
+    return () => document.removeEventListener('mousedown', handlePointerDownOutside);
   }, []);
 
   return (
     <div ref={ref} className={cn('relative', className)} onMouseDown={(e) => e.stopPropagation()}>
       <button
         type="button"
-        onClick={(e) => {
+        onMouseDown={(e) => {
+          e.preventDefault();
           e.stopPropagation();
+          if (debug) {
+            console.debug('[Combobox] toggle', { from: isOpen, to: !isOpen, value });
+          }
           setIsOpen(!isOpen);
         }}
         className="w-full bg-mnr-bg border border-mnr-border px-4 py-3 text-mnr-text font-mono text-base text-left flex items-center justify-between focus:outline-none focus:border-mnr-accent"
@@ -56,11 +69,20 @@ export function Combobox({ options, value, onChange, placeholder = 'Выбери
             <button
               key={option.value}
               type="button"
-              onClick={(e) => {
+              onMouseDown={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
+                if (debug) {
+                  console.debug('[Combobox] select option', {
+                    previousValue: value,
+                    nextValue: option.value,
+                    label: option.label,
+                  });
+                }
                 onChange(option.value);
                 setIsOpen(false);
               }}
+              onClick={(e) => e.preventDefault()}
               className={cn(
                 'w-full px-4 py-3 text-left flex items-center justify-between hover:bg-mnr-accent/10 transition-colors',
                 option.value === value && 'bg-mnr-accent/10'

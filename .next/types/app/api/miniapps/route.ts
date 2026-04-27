@@ -1,4 +1,4 @@
-// File: /home/deda/mannru_neo/app/api/miniapps/route.ts
+// File: /run/media/udc/Files/mannru_neo/app/api/miniapps/route.ts
 import * as entry from '../../../../../app/api/miniapps/route.js'
 import type { NextRequest } from 'next/server.js'
 

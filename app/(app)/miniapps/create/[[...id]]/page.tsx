@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, use, useCallback, useRef } from 'react';
-import { Trash2, Save, ArrowLeft, Type, Square, Minus, Layers, Grid3x3, Plus, X, Hash, DollarSign, TrendingUp, TrendingDown, Settings, MousePointer, ArrowUp, ArrowDown, FileText, Calculator, Image, Keyboard, ToggleRight, Sliders, CreditCard, Divide as DivideIcon, User, Award, Clock, Shuffle, ExternalLink, FolderOpen, Save as SaveIcon, GitBranch, Scale, Play, Pause, RotateCcw } from 'lucide-react';
+import { Trash2, Save, ArrowLeft, ArrowRight, Type, Square, Minus, Layers, Grid3x3, Plus, X, Hash, DollarSign, TrendingUp, TrendingDown, Settings, MousePointer, ArrowUp, ArrowDown, FileText, Calculator, Image, Keyboard, ToggleRight, Sliders, CreditCard, Divide as DivideIcon, User, Award, Clock, Shuffle, ExternalLink, FolderOpen, Save as SaveIcon, GitBranch, Scale, Play, Pause, RotateCcw } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import { FastTransitionLink } from '@/components/fast-transition-link';
 import { Combobox } from '@/components/ui/combobox';
@@ -40,6 +40,14 @@ interface MiniAppVariable {
   description?: string;
 }
 
+interface MiniAppScreen {
+  id: string;
+  name: string;
+  components: MiniAppComponent[];
+  nodes: any[];
+  edges: any[];
+}
+
 interface CustomNodeData {
   type: string;
   componentId?: string;
@@ -49,6 +57,7 @@ interface CustomNodeData {
   operation?: string;
   variables?: Array<{ id: string; name: string }>;
   components?: Array<{ id: string; type: string; props: { label: string } }>;
+  screens?: Array<{ id: string; name: string }>;
   updateNodeData?: (nodeId: string, data: any) => void;
   deleteNode?: (nodeId: string) => void;
   nodeId: string;
@@ -72,15 +81,25 @@ export default function CreateMiniAppPage() {
   const editId = Array.isArray(idParam) ? idParam[0] : idParam;
   const isEditing = !!editId;
   
+  const initialScreen: MiniAppScreen = {
+    id: Math.random().toString(36).substring(7),
+    name: 'Экран 1',
+    components: [],
+    nodes: [],
+    edges: [],
+  };
+
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [isPublic, setIsPublic] = useState(false);
   const [components, setComponents] = useState<MiniAppComponent[]>([]);
+  const [screens, setScreens] = useState<MiniAppScreen[]>([initialScreen]);
+  const [currentScreenId, setCurrentScreenId] = useState(initialScreen.id);
   const [variables, setVariables] = useState<MiniAppVariable[]>([]);
   
   // React Flow state
-  const [flowNodes, setFlowNodes, onNodesChange] = useNodesState([]);
-  const [flowEdges, setFlowEdges, onEdgesChange] = useEdgesState([]);
+  const [flowNodes, setFlowNodes, onNodesChange] = useNodesState<Node>([]);
+  const [flowEdges, setFlowEdges, onEdgesChange] = useEdgesState<Edge>([]);
   
   const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null);
   const [tab, setTab] = useState<'visual' | 'nodes'>('visual');
@@ -88,10 +107,265 @@ export default function CreateMiniAppPage() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showIconPicker, setShowIconPicker] = useState(false);
+  const [resizing, setResizing] = useState<{ componentId: string; direction: string; startX: number; startY: number; startWidth: number; startHeight: number } | null>(null);
+  const [dragging, setDragging] = useState<{ componentId: string; startX: number; startY: number; startLeft: number; startTop: number } | null>(null);
+  const [showGrid, setShowGrid] = useState(true);
+  const [gridSize, setGridSize] = useState(10);
+
+  const toOldNodes = useCallback((nodes: Node[]) => {
+    return nodes.map((node) => ({
+      id: node.id,
+      type: (node.data as any)?.type,
+      x: node.position.x,
+      y: node.position.y,
+      data: node.data,
+    }));
+  }, []);
+
+  const toOldEdges = useCallback((edges: Edge[]) => {
+    return edges.map((edge) => ({
+      id: edge.id,
+      sourceNodeId: edge.source,
+      targetNodeId: edge.target,
+      sourcePortId: edge.sourceHandle,
+      targetPortId: edge.targetHandle,
+    }));
+  }, []);
+
+  const hydrateFlowNodes = useCallback((storedNodes: any[], screenComponents: MiniAppComponent[]) => {
+    return (storedNodes || []).map((node: any) => ({
+      id: node.id,
+      type: 'custom',
+      position: { x: node.x, y: node.y },
+      data: {
+        ...node.data,
+        type: node.type,
+        nodeId: node.id,
+        variables,
+        components: screenComponents,
+        screens,
+        componentsRef,
+        variablesRef,
+        screensRef,
+        updateNodeData: handleUpdateNodeData,
+        deleteNode: removeNode,
+      },
+    }));
+  }, [variables]);
+
+  const hydrateFlowEdges = useCallback((storedEdges: any[]) => {
+    return (storedEdges || []).map((edge: any) => ({
+      id: edge.id,
+      source: edge.sourceNodeId,
+      target: edge.targetNodeId,
+      sourceHandle: edge.sourcePortId,
+      targetHandle: edge.targetPortId,
+    }));
+  }, []);
+
+  const syncCurrentScreen = useCallback((nextComponents: MiniAppComponent[] = components, nextNodes: Node[] = flowNodes, nextEdges: Edge[] = flowEdges) => {
+    setScreens((prev) =>
+      prev.map((screen) =>
+        screen.id === currentScreenId
+          ? {
+              ...screen,
+              components: nextComponents,
+              nodes: toOldNodes(nextNodes),
+              edges: toOldEdges(nextEdges),
+            }
+          : screen
+      )
+    );
+  }, [components, currentScreenId, flowEdges, flowNodes, toOldEdges, toOldNodes]);
+
+  const switchScreen = (screenId: string) => {
+    if (screenId === currentScreenId) return;
+    const targetScreen = screens.find((s) => s.id === screenId);
+    if (!targetScreen) return;
+
+    syncCurrentScreen();
+    setCurrentScreenId(screenId);
+    setComponents(targetScreen.components || []);
+    setFlowNodes(hydrateFlowNodes(targetScreen.nodes || [], targetScreen.components || []));
+    setFlowEdges(hydrateFlowEdges(targetScreen.edges || []));
+    setSelectedComponentId(null);
+  };
+
+  const addScreen = () => {
+    syncCurrentScreen();
+    const newScreen: MiniAppScreen = {
+      id: Math.random().toString(36).substring(7),
+      name: `Экран ${screens.length + 1}`,
+      components: [],
+      nodes: [],
+      edges: [],
+    };
+
+    setScreens((prev) => [...prev, newScreen]);
+    setCurrentScreenId(newScreen.id);
+    setComponents([]);
+    setFlowNodes([]);
+    setFlowEdges([]);
+    setSelectedComponentId(null);
+  };
+
+  const removeCurrentScreen = () => {
+    if (screens.length <= 1) return;
+
+    const currentIndex = screens.findIndex((s) => s.id === currentScreenId);
+    if (currentIndex === -1) return;
+
+    const remaining = screens.filter((s) => s.id !== currentScreenId);
+    const fallback = remaining[Math.max(0, currentIndex - 1)] || remaining[0];
+
+    setScreens(remaining);
+    setCurrentScreenId(fallback.id);
+    setComponents(fallback.components || []);
+    setFlowNodes(hydrateFlowNodes(fallback.nodes || [], fallback.components || []));
+    setFlowEdges(hydrateFlowEdges(fallback.edges || []));
+    setSelectedComponentId(null);
+  };
+
+  const goToPreviousScreen = () => {
+    const index = screens.findIndex((s) => s.id === currentScreenId);
+    if (index > 0) {
+      switchScreen(screens[index - 1].id);
+    }
+  };
+
+  const goToNextScreen = () => {
+    const index = screens.findIndex((s) => s.id === currentScreenId);
+    if (index >= 0 && index < screens.length - 1) {
+      switchScreen(screens[index + 1].id);
+    }
+  };
+
+  // Resize handlers
+  const handleResizeStart = (e: React.MouseEvent, componentId: string, direction: string) => {
+    e.stopPropagation();
+    const component = components.find(c => c.id === componentId);
+    if (!component) return;
+
+    const element = e.currentTarget.parentElement;
+    if (!element) return;
+
+    const rect = element.getBoundingClientRect();
+    const width = component.props.width === 'auto' ? rect.width : parseInt(component.props.width as string) || rect.width;
+    const height = component.props.height === 'auto' ? rect.height : parseInt(component.props.height as string) || rect.height;
+
+    setResizing({
+      componentId,
+      direction,
+      startX: e.clientX,
+      startY: e.clientY,
+      startWidth: width,
+      startHeight: height,
+    });
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!resizing) return;
+
+      const deltaX = e.clientX - resizing.startX;
+      const deltaY = e.clientY - resizing.startY;
+
+      let newWidth = resizing.startWidth;
+      let newHeight = resizing.startHeight;
+
+      if (resizing.direction.includes('e')) {
+        newWidth = Math.max(50, resizing.startWidth + deltaX);
+      }
+      if (resizing.direction.includes('w')) {
+        newWidth = Math.max(50, resizing.startWidth - deltaX);
+      }
+      if (resizing.direction.includes('s')) {
+        newHeight = Math.max(30, resizing.startHeight + deltaY);
+      }
+      if (resizing.direction.includes('n')) {
+        newHeight = Math.max(30, resizing.startHeight - deltaY);
+      }
+
+      // Snap to grid
+      const snappedWidth = Math.round(newWidth / gridSize) * gridSize;
+      const snappedHeight = Math.round(newHeight / gridSize) * gridSize;
+
+      updateComponent(resizing.componentId, {
+        width: `${snappedWidth}px`,
+        height: `${snappedHeight}px`,
+      });
+    };
+
+    const handleMouseUp = () => {
+      setResizing(null);
+    };
+
+    if (resizing) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [resizing, components, gridSize]);
+
+  // Drag handlers
+  const handleDragStart = (e: React.MouseEvent, componentId: string) => {
+    if (resizing) return;
+    e.stopPropagation();
+    const component = components.find(c => c.id === componentId);
+    if (!component) return;
+
+    setDragging({
+      componentId,
+      startX: e.clientX,
+      startY: e.clientY,
+      startLeft: component.props.x || 0,
+      startTop: component.props.y || 0,
+    });
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!dragging) return;
+
+      const deltaX = e.clientX - dragging.startX;
+      const deltaY = e.clientY - dragging.startY;
+
+      const newLeft = dragging.startLeft + deltaX;
+      const newTop = dragging.startTop + deltaY;
+
+      // Snap to grid
+      const snappedX = Math.round(newLeft / gridSize) * gridSize;
+      const snappedY = Math.round(newTop / gridSize) * gridSize;
+
+      updateComponent(dragging.componentId, {
+        x: snappedX,
+        y: snappedY,
+      });
+    };
+
+    const handleMouseUp = () => {
+      setDragging(null);
+    };
+
+    if (dragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [dragging, components, gridSize]);
 
   // Use refs to store current components and variables for nodes to access
   const componentsRef = useRef(components);
   const variablesRef = useRef(variables);
+  const screensRef = useRef(screens);
 
   useEffect(() => {
     componentsRef.current = components;
@@ -100,6 +374,10 @@ export default function CreateMiniAppPage() {
   useEffect(() => {
     variablesRef.current = variables;
   }, [variables]);
+
+  useEffect(() => {
+    screensRef.current = screens;
+  }, [screens]);
   useEffect(() => {
     const loadSidebarState = () => {
       const saved = localStorage.getItem('sidebarCollapsed');
@@ -138,13 +416,23 @@ export default function CreateMiniAppPage() {
   }, [isEditing, editId]);
 
   const handleUpdateNodeData = (nodeId: string, data: any) => {
+    let didUpdate = false;
     setFlowNodes((nodes) =>
-      nodes.map((node) =>
-        node.id === nodeId
-          ? { ...node, data: { ...node.data, ...data } }
-          : node
-      )
+      nodes.map((node) => {
+        if (node.id === nodeId) {
+          didUpdate = true;
+          return { ...node, data: { ...node.data, ...data } };
+        }
+        return node;
+      })
     );
+
+    if (!didUpdate) {
+      console.warn('[MiniApp] Node update miss', {
+        nodeId,
+        data,
+      });
+    }
   };
 
   const fetchMiniApp = async () => {
@@ -156,37 +444,32 @@ export default function CreateMiniAppPage() {
         setName(data.miniApp.name);
         setDescription(data.miniApp.description);
         setIsPublic(data.miniApp.isPublic);
-        setComponents(data.miniApp.components || []);
         setVariables(data.miniApp.variables || []);
-        
-        // Convert old node format to React Flow format
-        const convertedNodes = (data.miniApp.nodes || []).map((node: any) => ({
-          id: node.id,
-          type: 'custom',
-          position: { x: node.x, y: node.y },
-          data: {
-            ...node.data,
-            type: node.type,
-            nodeId: node.id,
-            variables: data.miniApp.variables || [],
-            components: data.miniApp.components || [],
-            componentsRef,
-            variablesRef,
-            updateNodeData: handleUpdateNodeData,
-            deleteNode: removeNode,
-          },
-        }));
-        setFlowNodes(convertedNodes);
-        
-        // Convert old edge format to React Flow format
-        const convertedEdges = (data.miniApp.edges || []).map((edge: any) => ({
-          id: edge.id,
-          source: edge.sourceNodeId,
-          target: edge.targetNodeId,
-          sourceHandle: edge.sourcePortId,
-          targetHandle: edge.targetPortId,
-        }));
-        setFlowEdges(convertedEdges);
+
+        const loadedScreens: MiniAppScreen[] = (data.miniApp.screens && data.miniApp.screens.length > 0)
+          ? data.miniApp.screens
+          : [
+              {
+                id: Math.random().toString(36).substring(7),
+                name: 'Экран 1',
+                components: data.miniApp.components || [],
+                nodes: data.miniApp.nodes || [],
+                edges: data.miniApp.edges || [],
+              },
+            ];
+
+        const startScreenId =
+          data.miniApp.startScreenId && loadedScreens.some((s) => s.id === data.miniApp.startScreenId)
+            ? data.miniApp.startScreenId
+            : loadedScreens[0].id;
+
+        const activeScreen = loadedScreens.find((s) => s.id === startScreenId) || loadedScreens[0];
+
+        setScreens(loadedScreens);
+        setCurrentScreenId(startScreenId);
+        setComponents(activeScreen.components || []);
+        setFlowNodes(hydrateFlowNodes(activeScreen.nodes || [], activeScreen.components || []));
+        setFlowEdges(hydrateFlowEdges(activeScreen.edges || []));
       }
     } catch (error) {
       console.error('Failed to fetch miniapp:', error);
@@ -207,37 +490,133 @@ export default function CreateMiniAppPage() {
   };
 
   const getDefaultProps = (type: MiniAppComponentType): Record<string, any> => {
+    const baseProps = {
+      x: 0,
+      y: 0,
+      width: 'auto',
+      height: 'auto',
+    };
+
     switch (type) {
       case 'button':
         return {
+          ...baseProps,
           label: 'Кнопка',
           action: 'addMoney',
           amount: 100,
           variant: 'primary',
           icon: 'none',
           silent: false,
+          backgroundColor: '#00ff00',
+          textColor: '#000000',
         };
       case 'text':
         return {
+          ...baseProps,
           content: 'Текст',
           size: 'medium',
           align: 'left',
           showVariable: false,
           variableId: '',
           variableFormat: '{value}',
+          fontSize: 16,
+          fontFamily: 'sans-serif',
+          color: '#ffffff',
         };
       case 'spacer':
         return {
+          ...baseProps,
           height: 20,
+          width: '100%',
         };
       case 'grid':
         return {
+          ...baseProps,
           columns: 2,
           gap: 8,
           cellComponents: [], // Array of component IDs for each cell
+          width: '100%',
+          height: 'auto',
+        };
+      case 'image':
+        return {
+          ...baseProps,
+          src: '',
+          alt: '',
+          objectFit: 'cover',
+          width: '100%',
+          height: 'auto',
+        };
+      case 'input':
+        return {
+          ...baseProps,
+          inputType: 'text',
+          placeholder: '',
+          width: '100%',
+          height: 'auto',
+        };
+      case 'counter':
+        return {
+          ...baseProps,
+          value: 0,
+          width: 'auto',
+          height: 'auto',
+        };
+      case 'progress':
+        return {
+          ...baseProps,
+          value: 50,
+          width: '100%',
+          height: 'auto',
+        };
+      case 'toggle':
+        return {
+          ...baseProps,
+          value: false,
+          width: 'auto',
+          height: 'auto',
+        };
+      case 'slider':
+        return {
+          ...baseProps,
+          min: 0,
+          max: 100,
+          value: 50,
+          width: '100%',
+          height: 'auto',
+        };
+      case 'card':
+        return {
+          ...baseProps,
+          title: '',
+          content: '',
+          width: '100%',
+          height: 'auto',
+        };
+      case 'divider':
+        return {
+          ...baseProps,
+          width: '100%',
+          height: 'auto',
+        };
+      case 'avatar':
+        return {
+          ...baseProps,
+          src: '',
+          initials: '?',
+          width: 'auto',
+          height: 'auto',
+        };
+      case 'badge':
+        return {
+          ...baseProps,
+          text: 'Badge',
+          variant: 'primary',
+          width: 'auto',
+          height: 'auto',
         };
       default:
-        return {};
+        return baseProps;
     }
   };
 
@@ -283,17 +662,20 @@ export default function CreateMiniAppPage() {
 
   // Node editor functions
   const addNode = (type: string) => {
+    const newNodeId = Math.random().toString(36).substring(7);
     const newNode: Node = {
-      id: Math.random().toString(36).substring(7),
+      id: newNodeId,
       type: 'custom',
       position: { x: 100, y: 100 },
       data: {
         type,
-        nodeId: Math.random().toString(36).substring(7),
+        nodeId: newNodeId,
         variables,
         components,
+        screens,
         componentsRef,
         variablesRef,
+        screensRef,
         updateNodeData: handleUpdateNodeData,
         deleteNode: removeNode,
       },
@@ -321,6 +703,7 @@ export default function CreateMiniAppPage() {
       saveToStorage: 'Сохранить в хранилище',
       loadFromStorage: 'Загрузить из хранилища',
       navigate: 'Навигация',
+      navigateScreen: 'Перейти на экран',
       openLink: 'Открыть ссылку',
       loop: 'Цикл',
       playSound: 'Воспроизвести звук',
@@ -344,23 +727,21 @@ export default function CreateMiniAppPage() {
 
     setSaving(true);
     try {
-      // Convert React Flow nodes back to old format
-      const oldNodes = flowNodes.map((node) => ({
-        id: node.id,
-        type: node.data.type,
-        x: node.position.x,
-        y: node.position.y,
-        data: node.data,
-      }));
+      const oldNodes = toOldNodes(flowNodes);
+      const oldEdges = toOldEdges(flowEdges);
 
-      // Convert React Flow edges back to old format
-      const oldEdges = flowEdges.map((edge) => ({
-        id: edge.id,
-        sourceNodeId: edge.source,
-        targetNodeId: edge.target,
-        sourcePortId: edge.sourceHandle,
-        targetPortId: edge.targetHandle,
-      }));
+      const persistedScreens = screens.map((screen) =>
+        screen.id === currentScreenId
+          ? {
+              ...screen,
+              components,
+              nodes: oldNodes,
+              edges: oldEdges,
+            }
+          : screen
+      );
+
+      const mainScreen = persistedScreens[0];
 
       const url = isEditing ? `/api/miniapps/${editId}` : '/api/miniapps';
       const method = isEditing ? 'PUT' : 'POST';
@@ -371,10 +752,12 @@ export default function CreateMiniAppPage() {
         body: JSON.stringify({
           name,
           description,
-          components,
+          components: mainScreen?.components || components,
           variables,
-          nodes: oldNodes,
-          edges: oldEdges,
+          nodes: mainScreen?.nodes || oldNodes,
+          edges: mainScreen?.edges || oldEdges,
+          screens: persistedScreens,
+          startScreenId: currentScreenId,
           isPublic,
         }),
       });
@@ -391,19 +774,25 @@ export default function CreateMiniAppPage() {
     }
   };
 
-  const renderComponent = (component: MiniAppComponent, isSelected: boolean) => {
+  const renderComponent = (component: MiniAppComponent) => {
+    const width = component.props.width !== 'auto' ? component.props.width : '100%';
+    const height = component.props.height !== 'auto' ? component.props.height : 'auto';
+
     switch (component.type) {
       case 'button':
         const IconComponent = ICONS.find((i) => i.name === component.props.icon)?.icon;
         return (
           <button
             className={cn(
-              'w-full p-4 font-bold border-2 transition-all flex items-center justify-center gap-2',
-              component.props.variant === 'primary'
-                ? 'bg-mnr-accent text-black border-mnr-accent shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
-                : 'bg-mnr-surface text-mnr-text border-mnr-border',
-              isSelected && 'ring-2 ring-mnr-accent ring-offset-2 ring-offset-[#0c0c0e]'
+              'w-full p-4 font-bold border-2 transition-all flex items-center justify-center gap-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
             )}
+            style={{ 
+              width, 
+              height,
+              backgroundColor: component.props.backgroundColor,
+              color: component.props.textColor,
+              borderColor: component.props.backgroundColor,
+            }}
           >
             {IconComponent && <IconComponent className="h-5 w-5" />}
             {component.props.label}
@@ -423,11 +812,16 @@ export default function CreateMiniAppPage() {
         return (
           <div
             className={cn(
-              'font-bold text-mnr-text p-2 border-2 border-transparent',
-              sizeClasses[component.props.size as keyof typeof sizeClasses],
-              alignClasses[component.props.align as keyof typeof alignClasses],
-              isSelected && 'ring-2 ring-mnr-accent ring-offset-2 ring-offset-[#0c0c0e]'
+              'font-bold p-2 border-2 border-transparent',
+              alignClasses[component.props.align as keyof typeof alignClasses]
             )}
+            style={{ 
+              width, 
+              height,
+              fontSize: `${component.props.fontSize}px`,
+              fontFamily: component.props.fontFamily,
+              color: component.props.color,
+            }}
           >
             {component.props.content}
           </div>
@@ -435,16 +829,14 @@ export default function CreateMiniAppPage() {
       case 'image':
         return (
           <div
-            className={cn(
-              'border-2 border-mnr-border overflow-hidden',
-              isSelected && 'ring-2 ring-mnr-accent ring-offset-2 ring-offset-[#0c0c0e]'
-            )}
+            className="border-2 border-mnr-border overflow-hidden"
+            style={{ width, height }}
           >
             {component.props.src ? (
               <img
                 src={component.props.src}
                 alt={component.props.alt || ''}
-                className="w-full h-auto"
+                className="w-full h-full"
                 style={{ objectFit: component.props.objectFit || 'cover' }}
               />
             ) : (
@@ -459,19 +851,15 @@ export default function CreateMiniAppPage() {
           <input
             type={component.props.inputType || 'text'}
             placeholder={component.props.placeholder || ''}
-            className={cn(
-              'w-full p-3 bg-mnr-surface border-2 border-mnr-border text-mnr-text font-bold focus:border-mnr-accent outline-none',
-              isSelected && 'ring-2 ring-mnr-accent ring-offset-2 ring-offset-[#0c0c0e]'
-            )}
+            className="w-full p-3 bg-mnr-surface border-2 border-mnr-border text-mnr-text font-bold focus:border-mnr-accent outline-none"
+            style={{ width, height }}
           />
         );
       case 'counter':
         return (
           <div
-            className={cn(
-              'flex items-center gap-2 bg-mnr-surface border-2 border-mnr-border p-2',
-              isSelected && 'ring-2 ring-mnr-accent ring-offset-2 ring-offset-[#0c0c0e]'
-            )}
+            className="flex items-center gap-2 bg-mnr-surface border-2 border-mnr-border p-2"
+            style={{ width, height }}
           >
             <button className="w-8 h-8 bg-mnr-accent text-black font-bold border-2 border-black">-</button>
             <span className="font-bold text-mnr-text text-xl">{component.props.value || 0}</span>
@@ -480,12 +868,7 @@ export default function CreateMiniAppPage() {
         );
       case 'progress':
         return (
-          <div
-            className={cn(
-              'w-full',
-              isSelected && 'ring-2 ring-mnr-accent ring-offset-2 ring-offset-[#0c0c0e]'
-            )}
-          >
+          <div style={{ width, height }}>
             <div className="w-full h-4 bg-mnr-surface border-2 border-mnr-border overflow-hidden">
               <div
                 className="h-full bg-mnr-accent transition-all"
@@ -499,9 +882,9 @@ export default function CreateMiniAppPage() {
           <div
             className={cn(
               'relative w-12 h-6 transition-colors',
-              component.props.value ? 'bg-mnr-accent' : 'bg-mnr-surface border-2 border-mnr-border',
-              isSelected && 'ring-2 ring-mnr-accent ring-offset-2 ring-offset-[#0c0c0e]'
+              component.props.value ? 'bg-mnr-accent' : 'bg-mnr-surface border-2 border-mnr-border'
             )}
+            style={{ width, height }}
           >
             <div
               className={cn(
@@ -519,19 +902,15 @@ export default function CreateMiniAppPage() {
             max={component.props.max || 100}
             value={component.props.value || 50}
             onChange={(e) => updateComponent(component.id, { value: parseInt(e.target.value) || 50 })}
-            className={cn(
-              'w-full accent-mnr-accent',
-              isSelected && 'ring-2 ring-mnr-accent ring-offset-2 ring-offset-[#0c0c0e]'
-            )}
+            className="w-full accent-mnr-accent"
+            style={{ width, height }}
           />
         );
       case 'card':
         return (
           <div
-            className={cn(
-              'bg-mnr-surface border-2 border-mnr-border p-4',
-              isSelected && 'ring-2 ring-mnr-accent ring-offset-2 ring-offset-[#0c0c0e]'
-            )}
+            className="bg-mnr-surface border-2 border-mnr-border p-4"
+            style={{ width, height }}
           >
             {component.props.title && (
               <div className="font-bold text-mnr-text mb-2">{component.props.title}</div>
@@ -544,19 +923,15 @@ export default function CreateMiniAppPage() {
       case 'divider':
         return (
           <div
-            className={cn(
-              'w-full h-px bg-mnr-border',
-              isSelected && 'ring-2 ring-mnr-accent ring-offset-2 ring-offset-[#0c0c0e]'
-            )}
+            className="w-full h-px bg-mnr-border"
+            style={{ width, height }}
           />
         );
       case 'avatar':
         return (
           <div
-            className={cn(
-              'w-12 h-12 rounded-full bg-mnr-surface border-2 border-mnr-border flex items-center justify-center overflow-hidden',
-              isSelected && 'ring-2 ring-mnr-accent ring-offset-2 ring-offset-[#0c0c0e]'
-            )}
+            className="rounded-full bg-mnr-surface border-2 border-mnr-border flex items-center justify-center overflow-hidden"
+            style={{ width: height || '48px', height: height || '48px' }}
           >
             {component.props.src ? (
               <img src={component.props.src} alt="" className="w-full h-full object-cover" />
@@ -572,9 +947,9 @@ export default function CreateMiniAppPage() {
               'inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border-2',
               component.props.variant === 'primary'
                 ? 'bg-mnr-accent text-black border-mnr-accent'
-                : 'bg-mnr-surface text-mnr-text border-mnr-border',
-              isSelected && 'ring-2 ring-mnr-accent ring-offset-2 ring-offset-[#0c0c0e]'
+                : 'bg-mnr-surface text-mnr-text border-mnr-border'
             )}
+            style={{ width, height }}
           >
             {component.props.text || 'Badge'}
           </div>
@@ -582,21 +957,17 @@ export default function CreateMiniAppPage() {
       case 'spacer':
         return (
           <div
-            className={cn(
-              'border-2 border-dashed border-mnr-border/30',
-              isSelected && 'ring-2 ring-mnr-accent ring-offset-2 ring-offset-[#0c0c0e]'
-            )}
-            style={{ height: component.props.height }}
+            className="border-2 border-dashed border-mnr-border/30"
+            style={{ width, height: component.props.height }}
           />
         );
       case 'grid':
         return (
           <div
-            className={cn(
-              'grid gap-2 border-2 border-dashed border-mnr-border/30 p-2',
-              isSelected && 'ring-2 ring-mnr-accent ring-offset-2 ring-offset-[#0c0c0e]'
-            )}
+            className="grid gap-2 border-2 border-dashed border-mnr-border/30 p-2"
             style={{ 
+              width,
+              height,
               gridTemplateColumns: `repeat(${component.props.columns}, 1fr)`,
               gap: `${component.props.gap}px`
             }}
@@ -608,7 +979,7 @@ export default function CreateMiniAppPage() {
                 <div key={i} className="bg-mnr-surface border border-mnr-border min-h-[64px] flex items-center justify-center">
                   {cellComponent ? (
                     <div className="w-full h-full p-2">
-                      {renderComponent(cellComponent, false)}
+                      {renderComponent(cellComponent)}
                     </div>
                   ) : (
                     <span className="text-mnr-muted text-xs">Ячейка {i + 1}</span>
@@ -624,6 +995,61 @@ export default function CreateMiniAppPage() {
   };
 
   const selectedComponent = components.find((c) => c.id === selectedComponentId);
+
+  // Resize handle component
+  const ResizeHandle = ({ direction, componentId }: { direction: string; componentId: string }) => {
+    const positions: Record<string, string> = {
+      'n': 'top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 cursor-n-resize',
+      's': 'bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 cursor-s-resize',
+      'e': 'right-0 top-1/2 -translate-y-1/2 translate-x-1/2 cursor-e-resize',
+      'w': 'left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 cursor-w-resize',
+      'ne': 'top-0 right-0 translate-x-1/2 -translate-y-1/2 cursor-ne-resize',
+      'nw': 'top-0 left-0 -translate-x-1/2 -translate-y-1/2 cursor-nw-resize',
+      'se': 'bottom-0 right-0 translate-x-1/2 translate-y-1/2 cursor-se-resize',
+      'sw': 'bottom-0 left-0 -translate-x-1/2 translate-y-1/2 cursor-sw-resize',
+    };
+
+    return (
+      <div
+        className={`absolute w-3 h-3 bg-mnr-accent border-2 border-black z-10 ${positions[direction]}`}
+        onMouseDown={(e) => handleResizeStart(e, componentId, direction)}
+      />
+    );
+  };
+
+  // Wrapper component with resize handles
+  const ComponentWrapper = ({ component, children, isSelected }: { component: MiniAppComponent; children: React.ReactNode; isSelected: boolean }) => {
+    const width = component.props.width !== 'auto' ? component.props.width : 'auto';
+    const height = component.props.height !== 'auto' ? component.props.height : 'auto';
+    const x = component.props.x || 0;
+    const y = component.props.y || 0;
+
+    return (
+      <div
+        className={cn('absolute inline-block', isSelected ? 'ring-2 ring-mnr-accent ring-offset-2 ring-offset-[#0c0c0e]' : '')}
+        style={{ left: x, top: y, width, height }}
+        onMouseDown={(e) => {
+          e.stopPropagation();
+          setSelectedComponentId(component.id);
+          handleDragStart(e, component.id);
+        }}
+      >
+        {children}
+        {isSelected && (
+          <>
+            <ResizeHandle direction="n" componentId={component.id} />
+            <ResizeHandle direction="s" componentId={component.id} />
+            <ResizeHandle direction="e" componentId={component.id} />
+            <ResizeHandle direction="w" componentId={component.id} />
+            <ResizeHandle direction="ne" componentId={component.id} />
+            <ResizeHandle direction="nw" componentId={component.id} />
+            <ResizeHandle direction="se" componentId={component.id} />
+            <ResizeHandle direction="sw" componentId={component.id} />
+          </>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className={cn(
@@ -665,6 +1091,33 @@ export default function CreateMiniAppPage() {
               Узлы
             </button>
           </div>
+          {tab === 'visual' && (
+            <div className="flex items-center gap-2 border-4 border-mnr-border rounded-none px-2">
+              <button
+                onClick={() => setShowGrid(!showGrid)}
+                className={cn(
+                  'p-2 font-bold text-sm transition-all',
+                  showGrid
+                    ? 'bg-mnr-accent text-black'
+                    : 'bg-mnr-surface text-mnr-text hover:text-mnr-accent'
+                )}
+              >
+                <Grid3x3 className="h-4 w-4" />
+              </button>
+              {showGrid && (
+                <select
+                  value={gridSize}
+                  onChange={(e) => setGridSize(parseInt(e.target.value))}
+                  className="bg-mnr-surface text-mnr-text text-sm focus:border-mnr-accent outline-none"
+                >
+                  <option value="5">5px</option>
+                  <option value="10">10px</option>
+                  <option value="20">20px</option>
+                  <option value="50">50px</option>
+                </select>
+              )}
+            </div>
+          )}
           <button
             onClick={handleSave}
             disabled={saving}
@@ -682,6 +1135,44 @@ export default function CreateMiniAppPage() {
             {/* Left Panel - Layers */}
             <div className="w-64 bg-[#18181b] border-r border-mnr-border flex flex-col flex-shrink-0">
               <div className="p-4 border-b border-mnr-border flex-shrink-0">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="text-xs font-bold uppercase tracking-widest text-mnr-muted">
+                    Экраны
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={addScreen}
+                      className="p-1 bg-mnr-accent text-black hover:bg-mnr-accent/80 transition-all"
+                      title="Добавить экран"
+                    >
+                      <Plus className="h-3 w-3" />
+                    </button>
+                    <button
+                      onClick={removeCurrentScreen}
+                      disabled={screens.length <= 1}
+                      className="p-1 bg-mnr-error/20 text-mnr-error hover:bg-mnr-error/30 transition-all disabled:opacity-40"
+                      title="Удалить текущий экран"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-1 mb-4 max-h-28 overflow-y-auto">
+                  {screens.map((screen, index) => (
+                    <button
+                      key={screen.id}
+                      onClick={() => switchScreen(screen.id)}
+                      className={cn(
+                        'w-full text-left p-2 text-xs font-bold border transition-all',
+                        currentScreenId === screen.id
+                          ? 'bg-mnr-accent/20 border-mnr-accent text-mnr-text'
+                          : 'bg-mnr-surface border-mnr-border text-mnr-muted hover:border-mnr-accent'
+                      )}
+                    >
+                      {screen.name || `Экран ${index + 1}`}
+                    </button>
+                  ))}
+                </div>
                 <div className="text-xs font-bold uppercase tracking-widest text-mnr-muted">
                   Слои
                 </div>
@@ -735,8 +1226,26 @@ export default function CreateMiniAppPage() {
             </div>
 
             {/* Center - Canvas */}
-            <div className="flex-1 p-8 overflow-y-auto">
-              <div className="max-w-md mx-auto bg-[#18181b] border-2 border-mnr-border p-6 min-h-[500px] space-y-4">
+            <div className="flex-1 overflow-y-auto">
+              <div
+                className="w-full bg-[#18181b] border-2 border-mnr-border p-6 h-full relative"
+                style={{ minHeight: '1000px' }}
+                onClick={(e) => {
+                  setSelectedComponentId(null);
+                }}
+              >
+                {showGrid && (
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      backgroundImage: `
+                        linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px)
+                      `,
+                      backgroundSize: `${gridSize}px ${gridSize}px`,
+                    }}
+                  />
+                )}
                 {components.length === 0 ? (
                   <div className="text-center py-24 text-mnr-muted">
                     <Layers className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -744,10 +1253,14 @@ export default function CreateMiniAppPage() {
                     <p className="text-sm mt-2">Добавьте компоненты из панели снизу</p>
                   </div>
                 ) : (
-                  components.map((component, index) => (
-                    <div key={component.id} onClick={() => setSelectedComponentId(component.id)}>
-                      {renderComponent(component, selectedComponentId === component.id)}
-                    </div>
+                  components.map((component) => (
+                    <ComponentWrapper
+                      key={component.id}
+                      component={component}
+                      isSelected={selectedComponentId === component.id}
+                    >
+                      {renderComponent(component)}
+                    </ComponentWrapper>
                   ))
                 )}
               </div>
@@ -848,6 +1361,72 @@ export default function CreateMiniAppPage() {
                   <span className="text-xs font-bold text-mnr-accent uppercase">{selectedComponent.type}</span>
                 </div>
 
+                {/* Position controls */}
+                <div>
+                  <label className="block text-xs font-bold text-mnr-muted mb-1">Позиция X</label>
+                  <input
+                    type="number"
+                    value={selectedComponent.props.x || 0}
+                    onChange={(e) => updateComponent(selectedComponent.id, { x: parseInt(e.target.value) || 0 })}
+                    className="w-full p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-sm focus:border-mnr-accent outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-mnr-muted mb-1">Позиция Y</label>
+                  <input
+                    type="number"
+                    value={selectedComponent.props.y || 0}
+                    onChange={(e) => updateComponent(selectedComponent.id, { y: parseInt(e.target.value) || 0 })}
+                    className="w-full p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-sm focus:border-mnr-accent outline-none"
+                  />
+                </div>
+
+                {/* Width/Height controls */}
+                <div>
+                  <label className="block text-xs font-bold text-mnr-muted mb-1">Ширина</label>
+                  <div className="flex gap-2">
+                    <select
+                      value={selectedComponent.props.width === 'auto' ? 'auto' : 'custom'}
+                      onChange={(e) => updateComponent(selectedComponent.id, { width: e.target.value === 'auto' ? 'auto' : selectedComponent.props.width })}
+                      className="flex-1 p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-sm focus:border-mnr-accent outline-none"
+                    >
+                      <option value="auto">Авто</option>
+                      <option value="custom">Задать</option>
+                    </select>
+                    {selectedComponent.props.width !== 'auto' && (
+                      <input
+                        type="text"
+                        value={selectedComponent.props.width || ''}
+                        onChange={(e) => updateComponent(selectedComponent.id, { width: e.target.value })}
+                        className="w-20 p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-sm focus:border-mnr-accent outline-none"
+                        placeholder="100px"
+                      />
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-mnr-muted mb-1">Высота</label>
+                  <div className="flex gap-2">
+                    <select
+                      value={selectedComponent.props.height === 'auto' ? 'auto' : 'custom'}
+                      onChange={(e) => updateComponent(selectedComponent.id, { height: e.target.value === 'auto' ? 'auto' : selectedComponent.props.height })}
+                      className="flex-1 p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-sm focus:border-mnr-accent outline-none"
+                    >
+                      <option value="auto">Авто</option>
+                      <option value="custom">Задать</option>
+                    </select>
+                    {selectedComponent.props.height !== 'auto' && (
+                      <input
+                        type="text"
+                        value={selectedComponent.props.height || ''}
+                        onChange={(e) => updateComponent(selectedComponent.id, { height: e.target.value })}
+                        className="w-20 p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-sm focus:border-mnr-accent outline-none"
+                        placeholder="100px"
+                      />
+                    )}
+                  </div>
+                </div>
+
                 {selectedComponent.type === 'button' && (
                   <>
                     <div>
@@ -895,15 +1474,22 @@ export default function CreateMiniAppPage() {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-mnr-muted mb-1">Стиль</label>
-                      <select
-                        value={selectedComponent.props.variant || 'primary'}
-                        onChange={(e) => updateComponent(selectedComponent.id, { variant: e.target.value })}
-                        className="w-full p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-sm focus:border-mnr-accent outline-none"
-                      >
-                        <option value="primary">Основной</option>
-                        <option value="secondary">Вторичный</option>
-                      </select>
+                      <label className="block text-xs font-bold text-mnr-muted mb-1">Цвет фона</label>
+                      <input
+                        type="color"
+                        value={selectedComponent.props.backgroundColor || '#00ff00'}
+                        onChange={(e) => updateComponent(selectedComponent.id, { backgroundColor: e.target.value })}
+                        className="w-full h-10 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-sm focus:border-mnr-accent outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-mnr-muted mb-1">Цвет текста</label>
+                      <input
+                        type="color"
+                        value={selectedComponent.props.textColor || '#000000'}
+                        onChange={(e) => updateComponent(selectedComponent.id, { textColor: e.target.value })}
+                        className="w-full h-10 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-sm focus:border-mnr-accent outline-none"
+                      />
                     </div>
                     <div className="flex items-center gap-2">
                       <input
@@ -929,6 +1515,40 @@ export default function CreateMiniAppPage() {
                         onChange={(e) => updateComponent(selectedComponent.id, { content: e.target.value })}
                         className="w-full p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-sm focus:border-mnr-accent outline-none resize-none"
                         rows={2}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-mnr-muted mb-1">Размер шрифта (px)</label>
+                      <input
+                        type="number"
+                        value={selectedComponent.props.fontSize || 16}
+                        onChange={(e) => updateComponent(selectedComponent.id, { fontSize: parseInt(e.target.value) || 16 })}
+                        className="w-full p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-sm focus:border-mnr-accent outline-none"
+                        min="8"
+                        max="72"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-mnr-muted mb-1">Шрифт</label>
+                      <select
+                        value={selectedComponent.props.fontFamily || 'sans-serif'}
+                        onChange={(e) => updateComponent(selectedComponent.id, { fontFamily: e.target.value })}
+                        className="w-full p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-sm focus:border-mnr-accent outline-none"
+                      >
+                        <option value="sans-serif">Sans-serif</option>
+                        <option value="serif">Serif</option>
+                        <option value="monospace">Monospace</option>
+                        <option value="cursive">Cursive</option>
+                        <option value="fantasy">Fantasy</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-mnr-muted mb-1">Цвет</label>
+                      <input
+                        type="color"
+                        value={selectedComponent.props.color || '#ffffff'}
+                        onChange={(e) => updateComponent(selectedComponent.id, { color: e.target.value })}
+                        className="w-full h-10 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-sm focus:border-mnr-accent outline-none"
                       />
                     </div>
                     <div className="flex items-center gap-2">
@@ -1310,6 +1930,40 @@ export default function CreateMiniAppPage() {
             {/* Node Palette */}
             <div className="w-64 bg-[#18181b] border-r border-mnr-border flex flex-col flex-shrink-0">
               <div className="p-4 border-b border-mnr-border flex-shrink-0 overflow-y-auto max-h-[calc(100vh-200px)]">
+                <div className="mb-4 border-b border-mnr-border pb-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-xs font-bold uppercase tracking-widest text-mnr-muted">Экраны</div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={goToPreviousScreen}
+                        disabled={screens.findIndex((s) => s.id === currentScreenId) <= 0}
+                        className="p-1 bg-mnr-surface border border-mnr-border text-mnr-text hover:border-mnr-accent disabled:opacity-30"
+                        title="Предыдущий экран"
+                      >
+                        <ArrowLeft className="h-3 w-3" />
+                      </button>
+                      <button
+                        onClick={goToNextScreen}
+                        disabled={screens.findIndex((s) => s.id === currentScreenId) >= screens.length - 1}
+                        className="p-1 bg-mnr-surface border border-mnr-border text-mnr-text hover:border-mnr-accent disabled:opacity-30"
+                        title="Следующий экран"
+                      >
+                        <ArrowRight className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+                  <select
+                    value={currentScreenId}
+                    onChange={(e) => switchScreen(e.target.value)}
+                    className="w-full p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-xs font-bold focus:border-mnr-accent outline-none"
+                  >
+                    {screens.map((screen, index) => (
+                      <option key={screen.id} value={screen.id}>
+                        {screen.name || `Экран ${index + 1}`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div className="text-xs font-bold uppercase tracking-widest text-mnr-muted mb-4">
                   Узлы
                 </div>
@@ -1443,6 +2097,13 @@ export default function CreateMiniAppPage() {
                   >
                     <ExternalLink className="h-4 w-4" />
                     Навигация
+                  </button>
+                  <button
+                    onClick={() => addNode('navigateScreen')}
+                    className="w-full p-2 bg-mnr-surface border-2 border-mnr-border text-mnr-text text-xs font-bold hover:border-mnr-accent transition-all text-left flex items-center gap-2"
+                  >
+                    <ArrowRight className="h-4 w-4" />
+                    Перейти на экран
                   </button>
                   <button
                     onClick={() => addNode('openLink')}

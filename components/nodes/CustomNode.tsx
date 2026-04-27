@@ -16,8 +16,10 @@ interface CustomNodeData {
   operation?: string;
   variables?: Array<{ id: string; name: string }>;
   components?: Array<{ id: string; type: string; props: { label: string; placeholder?: string } }>;
+  screens?: Array<{ id: string; name: string }>;
   componentsRef?: React.RefObject<Array<{ id: string; type: string; props: { label: string; placeholder?: string } }>>;
   variablesRef?: React.RefObject<Array<{ id: string; name: string }>>;
+  screensRef?: React.RefObject<Array<{ id: string; name: string }>>;
   updateNodeData?: (nodeId: string, data: any) => void;
   deleteNode?: (nodeId: string) => void;
   nodeId: string;
@@ -29,6 +31,7 @@ export const CustomNode = memo(function CustomNode({ data, selected }: NodeProps
   // Get current components and variables from refs if available
   const currentComponents = typedData.componentsRef?.current || typedData.components || [];
   const currentVariables = typedData.variablesRef?.current || typedData.variables || [];
+  const currentScreens = typedData.screensRef?.current || typedData.screens || [];
   
   const getNodeIcon = (type: string) => {
     const icons: Record<string, any> = {
@@ -50,6 +53,7 @@ export const CustomNode = memo(function CustomNode({ data, selected }: NodeProps
       saveToStorage: SaveIcon,
       loadFromStorage: FolderOpen,
       navigate: ExternalLink,
+      navigateScreen: ExternalLink,
       openLink: ExternalLink,
       loop: RotateCcw,
       playSound: Play,
@@ -77,6 +81,7 @@ export const CustomNode = memo(function CustomNode({ data, selected }: NodeProps
       saveToStorage: 'Сохранить в хранилище',
       loadFromStorage: 'Загрузить из хранилища',
       navigate: 'Навигация',
+      navigateScreen: 'Перейти на экран',
       openLink: 'Открыть ссылку',
       loop: 'Цикл',
       playSound: 'Воспроизвести звук',
@@ -123,8 +128,13 @@ export const CustomNode = memo(function CustomNode({ data, selected }: NodeProps
                 value={typedData.value ?? 0}
                 onChange={(e) => {
                   const val = e.target.value;
-                  const numVal = val.startsWith('{') ? val : parseFloat(val);
-                  handleUpdate('value', isNaN(numVal) ? val : numVal);
+                  if (val.startsWith('{')) {
+                    handleUpdate('value', val);
+                    return;
+                  }
+
+                  const parsed = parseFloat(val);
+                  handleUpdate('value', Number.isNaN(parsed) ? val : parsed);
                 }}
                 className="w-full p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-xs font-bold focus:border-mnr-accent outline-none nodrag"
                 placeholder="Значение или {переменная}"
@@ -135,8 +145,13 @@ export const CustomNode = memo(function CustomNode({ data, selected }: NodeProps
                 value={typedData.amount ?? 1}
                 onChange={(e) => {
                   const val = e.target.value;
-                  const numVal = val.startsWith('{') ? val : parseFloat(val);
-                  handleUpdate('amount', isNaN(numVal) ? val : numVal);
+                  if (val.startsWith('{')) {
+                    handleUpdate('amount', val);
+                    return;
+                  }
+
+                  const parsed = parseFloat(val);
+                  handleUpdate('amount', Number.isNaN(parsed) ? val : parsed);
                 }}
                 className="w-full p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-xs font-bold focus:border-mnr-accent outline-none nodrag"
                 placeholder="Значение или {переменная}"
@@ -154,8 +169,13 @@ export const CustomNode = memo(function CustomNode({ data, selected }: NodeProps
               value={typedData.amount ?? 100}
               onChange={(e) => {
                 const val = e.target.value;
-                const numVal = val.startsWith('{') ? val : parseFloat(val);
-                handleUpdate('amount', isNaN(numVal) ? val : numVal);
+                if (val.startsWith('{')) {
+                  handleUpdate('amount', val);
+                  return;
+                }
+
+                const parsed = parseFloat(val);
+                handleUpdate('amount', Number.isNaN(parsed) ? val : parsed);
               }}
               className="w-full p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-xs font-bold focus:border-mnr-accent outline-none nodrag"
               placeholder="Сумма или {переменная}"
@@ -188,8 +208,13 @@ export const CustomNode = memo(function CustomNode({ data, selected }: NodeProps
               value={typedData.amount ?? 1}
               onChange={(e) => {
                 const val = e.target.value;
-                const numVal = val.startsWith('{') ? val : parseFloat(val);
-                handleUpdate('amount', isNaN(numVal) ? val : numVal);
+                if (val.startsWith('{')) {
+                  handleUpdate('amount', val);
+                  return;
+                }
+
+                const parsed = parseFloat(val);
+                handleUpdate('amount', Number.isNaN(parsed) ? val : parsed);
               }}
               className="w-full p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-xs font-bold focus:border-mnr-accent outline-none nodrag"
               placeholder="Значение 1"
@@ -199,8 +224,13 @@ export const CustomNode = memo(function CustomNode({ data, selected }: NodeProps
               value={typedData.value2 ?? 1}
               onChange={(e) => {
                 const val = e.target.value;
-                const numVal = val.startsWith('{') ? val : parseFloat(val);
-                handleUpdate('value2', isNaN(numVal) ? val : numVal);
+                if (val.startsWith('{')) {
+                  handleUpdate('value2', val);
+                  return;
+                }
+
+                const parsed = parseFloat(val);
+                handleUpdate('value2', Number.isNaN(parsed) ? val : parsed);
               }}
               className="w-full p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-xs font-bold focus:border-mnr-accent outline-none nodrag"
               placeholder="Значение 2"
@@ -371,6 +401,18 @@ export const CustomNode = memo(function CustomNode({ data, selected }: NodeProps
               onChange={(e) => handleUpdate('value', e.target.value)}
               className="w-full p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-xs font-bold focus:border-mnr-accent outline-none nodrag"
               placeholder="Путь"
+            />
+          </div>
+        );
+
+      case 'navigateScreen':
+        return (
+          <div className="space-y-2 nodrag">
+            <Combobox
+              options={currentScreens.map((s) => ({ value: s.id, label: s.name })) || []}
+              value={typedData.value != null ? String(typedData.value) : ''}
+              onChange={(screenId) => handleUpdate('value', screenId)}
+              placeholder="Выберите экран"
             />
           </div>
         );
