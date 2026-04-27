@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { name, description, components, variables, nodes, edges, isPublic } = body;
+    const { name, description, components, variables, nodes, edges, screens, startScreenId, isPublic } = body;
 
     if (!name || !description || !components) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -52,6 +52,8 @@ export async function POST(request: NextRequest) {
       variables: variables || [],
       nodes: nodes || [],
       edges: edges || [],
+      screens: screens || [],
+      startScreenId: startScreenId || undefined,
       isPublic: isPublic || false,
     });
 

@@ -8,25 +8,30 @@ import { cn } from '@/lib/utils';
 
 interface MiniAppComponent {
   id: string;
-  type: 'button' | 'text' | 'spacer' | 'grid' | 'image' | 'input' | 'counter' | 'progress' | 'toggle' | 'slider' | 'card' | 'divider' | 'avatar' | 'badge';
+  type: 'button' | 'iconButton' | 'text' | 'spacer' | 'grid' | 'image' | 'input' | 'counter' | 'progress' | 'toggle' | 'slider' | 'card' | 'divider' | 'avatar' | 'badge';
   props: Record<string, any>;
   order: number;
+}
+
+interface MiniAppScreen {
+  id: string;
+  name: string;
+  components: MiniAppComponent[];
+  nodes: any[];
+  edges: any[];
 }
 
 interface MiniApp {
   id: string;
   name: string;
   description: string;
-  authorId: string;
   authorUsername: string;
-  components: MiniAppComponent[];
-  variables: any[];
+  variables: Array<{ id: string; name: string; defaultValue: number }>;
+  screens?: MiniAppScreen[];
+  components?: MiniAppComponent[];
   nodes?: any[];
   edges?: any[];
-  isPublic: boolean;
-  downloads: number;
-  createdAt: string;
-  updatedAt: string;
+  startScreenId?: string;
 }
 
 const ICONS = {
@@ -34,9 +39,10 @@ const ICONS = {
   minus: Minus,
   hash: Hash,
   dollar: DollarSign,
-  trendingUp: TrendingUp,
-  trendingDown: TrendingDown,
+  up: TrendingUp,
+  down: TrendingDown,
   settings: Settings,
+  x: X,
 };
 
 export default function RunMiniAppPage({ params }: { params: Promise<{ id: string }> }) {
@@ -47,8 +53,44 @@ export default function RunMiniAppPage({ params }: { params: Promise<{ id: strin
   const [executing, setExecuting] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [variableValues, setVariableValues] = useState<Record<string, number>>({});
+  const [currentScreenId, setCurrentScreenId] = useState<string>('');
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
 
-  // Load variable values from localStorage on mount
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobileViewport(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const screens: MiniAppScreen[] = miniApp?.screens && miniApp.screens.length > 0
+    ? miniApp.screens
+    : miniApp
+      ? [
+          {
+            id: 'default-screen',
+            name: 'Экран 1',
+            components: miniApp.components || [],
+            nodes: miniApp.nodes || [],
+            edges: miniApp.edges || [],
+          },
+        ]
+      : [];
+
+  const activeScreen = screens.find((s) => s.id === currentScreenId) || screens[0];
+  const activeComponents = activeScreen?.components || [];
+  const activeNodes = activeScreen?.nodes || [];
+  const activeEdges = activeScreen?.edges || [];
+
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => setMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
+
   useEffect(() => {
     const storageKey = `miniapp_${id}_variables`;
     const stored = localStorage.getItem(storageKey);
@@ -56,12 +98,11 @@ export default function RunMiniAppPage({ params }: { params: Promise<{ id: strin
       try {
         setVariableValues(JSON.parse(stored));
       } catch (e) {
-        console.error('Failed to parse stored variables:', e);
+        console.error('Failed to parse stored variables', e);
       }
     }
   }, [id]);
 
-  // Save variable values to localStorage whenever they change
   useEffect(() => {
     const storageKey = `miniapp_${id}_variables`;
     localStorage.setItem(storageKey, JSON.stringify(variableValues));
@@ -77,8 +118,26 @@ export default function RunMiniAppPage({ params }: { params: Promise<{ id: strin
       const res = await fetch(`/api/miniapps/${id}`);
       const data = await res.json();
       setMiniApp(data.miniApp);
+
+      const fetchedScreens: MiniAppScreen[] = data.miniApp?.screens && data.miniApp.screens.length > 0
+        ? data.miniApp.screens
+        : [
+            {
+              id: 'default-screen',
+              name: 'Экран 1',
+              components: data.miniApp?.components || [],
+              nodes: data.miniApp?.nodes || [],
+              edges: data.miniApp?.edges || [],
+            },
+          ];
+
+      const startScreenId =
+        data.miniApp?.startScreenId && fetchedScreens.some((screen) => screen.id === data.miniApp.startScreenId)
+          ? data.miniApp.startScreenId
+          : fetchedScreens[0]?.id || '';
+
+      setCurrentScreenId(startScreenId);
       
-      // Initialize variable values from defaults if not in localStorage
       const storageKey = `miniapp_${id}_variables`;
       const stored = localStorage.getItem(storageKey);
       if (!stored && data.miniApp?.variables) {
@@ -96,45 +155,49 @@ export default function RunMiniAppPage({ params }: { params: Promise<{ id: strin
     }
   };
 
-  const executeNodeGraph = async (componentId: string) => {
-    if (!miniApp?.nodes || !miniApp?.edges) return;
+  const interpolateVariables = (text: string, triggerContext?: { type: string; value: any }): string => {
+    if (!text || typeof text !== 'string') return String(text);
+    
+    return text.replace(/\{([\w.]+)\}/g, (match, path) => {
+      if (triggerContext && path === 'trigger.value') return String(triggerContext.value);
 
-    // Find the button click node for this component
-    const buttonClickNode = miniApp.nodes.find(
-      (n: any) => n.type === 'buttonClick' && n.data.componentId === componentId
-    );
+      if (!path.includes('.')) {
+        const variable = miniApp?.variables.find(v => v.name === path);
+        if (variable) {
+          const value = variableValues[variable.id] ?? variable.defaultValue;
+          return value.toString();
+        }
+      } else {
+        const [componentRef, prop] = path.split('.');
+        const screen = screens.find(s => s.id === currentScreenId);
+        if (!screen) return match;
 
-    if (!buttonClickNode) return;
+        const component = screen.components.find(c => 
+          c.id === componentRef || 
+          c.props.label === componentRef || 
+          c.props.placeholder === componentRef
+        );
 
-    // Execute the node graph starting from this node
-    await executeNode(buttonClickNode.id);
+        if (component) {
+          if (prop === 'value') return String(component.props.value ?? '');
+          return String(component.props[prop] ?? match);
+        }
+      }
+      return match;
+    });
   };
 
-  const interpolateNodeData = (data: any): any => {
+  const interpolateNodeData = (data: any, triggerContext?: { type: string; value: any }): any => {
     const result: any = {};
+    if (!data) return result;
     for (const key in data) {
       if (typeof data[key] === 'string') {
-        const interpolated = interpolateVariables(data[key]);
-        // If the original was a variable reference, try to convert to number
+        const interpolated = interpolateVariables(data[key], triggerContext);
         if (data[key].startsWith('{') && data[key].endsWith('}')) {
           const numVal = parseFloat(interpolated);
           result[key] = isNaN(numVal) ? interpolated : numVal;
         } else {
           result[key] = interpolated;
-        }
-      } else if (typeof data[key] === 'number') {
-        // For numbers, check if it's a string representation of a variable reference
-        const strValue = String(data[key]);
-        if (strValue.startsWith('{') && strValue.endsWith('}')) {
-          const varName = strValue.slice(1, -1);
-          const variable = miniApp?.variables.find(v => v.name === varName);
-          if (variable) {
-            result[key] = variableValues[variable.id] ?? variable.defaultValue;
-          } else {
-            result[key] = data[key];
-          }
-        } else {
-          result[key] = data[key];
         }
       } else {
         result[key] = data[key];
@@ -143,194 +206,244 @@ export default function RunMiniAppPage({ params }: { params: Promise<{ id: strin
     return result;
   };
 
-  const executeNode = async (nodeId: string) => {
-    const node = miniApp?.nodes?.find((n: any) => n.id === nodeId);
+  const executeNode = async (nodeId: string, nodes: any[], edges: any[], triggerContext?: { type: string; value: any }) => {
+    const node = nodes.find((n: any) => n.id === nodeId);
     if (!node) return;
 
-    // Interpolate variables in node data
-    const interpolatedData = interpolateNodeData(node.data);
+    const interpolatedData = interpolateNodeData(node.data, triggerContext);
 
-    switch (node.type) {
+    const findNextNodes = (sourceHandle?: string) => {
+      return edges
+        .filter(e => (e.sourceNodeId === nodeId || e.source === nodeId) && (sourceHandle ? e.sourceHandle === sourceHandle : true))
+        .map(e => e.targetNodeId || e.target);
+    };
+
+    switch (node.data?.type || node.type) {
       case 'buttonClick':
-        // Button click is just a trigger, find connected nodes
-        const connectedEdges = miniApp?.edges?.filter((e: any) => e.sourceNodeId === nodeId);
-        for (const edge of connectedEdges || []) {
-          await executeNode(edge.targetNodeId);
+      case 'onInputChange':
+      case 'onToggleChange':
+      case 'onSliderChange':
+        for (const targetId of findNextNodes()) {
+          await executeNode(targetId, nodes, edges, triggerContext);
         }
         break;
 
       case 'incrementVar':
       case 'decrementVar':
         if (interpolatedData.variableId) {
-          const amount = interpolatedData.amount || 1;
-          const operation = node.type === 'incrementVar' ? 'add' : 'subtract';
-          await executeVariableOperation(interpolatedData.variableId, operation, amount);
+          const amount = parseFloat(interpolatedData.amount) || 1;
+          const currentValue = variableValues[interpolatedData.variableId] ?? 0;
+          const newValue = (node.data?.type === 'incrementVar' || node.type === 'incrementVar') ? currentValue + amount : currentValue - amount;
+          setVariableValues(prev => ({ ...prev, [interpolatedData.variableId]: newValue }));
         }
-        // Execute connected nodes
-        const varEdges = miniApp?.edges?.filter((e: any) => e.sourceNodeId === nodeId);
-        for (const edge of varEdges || []) {
-          await executeNode(edge.targetNodeId);
+        for (const targetId of findNextNodes()) {
+          await executeNode(targetId, nodes, edges);
         }
         break;
 
       case 'setVar':
         if (interpolatedData.variableId) {
-          await setVariableValue(interpolatedData.variableId, interpolatedData.value || 0);
+          const val = isNaN(parseFloat(interpolatedData.value)) ? interpolatedData.value : parseFloat(interpolatedData.value);
+          setVariableValues(prev => ({ ...prev, [interpolatedData.variableId]: val }));
         }
-        const setVarEdges = miniApp?.edges?.filter((e: any) => e.sourceNodeId === nodeId);
-        for (const edge of setVarEdges || []) {
-          await executeNode(edge.targetNodeId);
-        }
-        break;
-
-      case 'addMoney':
-        await executeMoneyOperation('add', interpolatedData.amount || 100);
-        const addMoneyEdges = miniApp?.edges?.filter((e: any) => e.sourceNodeId === nodeId);
-        for (const edge of addMoneyEdges || []) {
-          await executeNode(edge.targetNodeId);
-        }
-        break;
-
-      case 'removeMoney':
-        await executeMoneyOperation('remove', interpolatedData.amount || 100);
-        const removeMoneyEdges = miniApp?.edges?.filter((e: any) => e.sourceNodeId === nodeId);
-        for (const edge of removeMoneyEdges || []) {
-          await executeNode(edge.targetNodeId);
+        for (const targetId of findNextNodes()) {
+          await executeNode(targetId, nodes, edges);
         }
         break;
 
       case 'math':
-        // Math operations would need a target variable, skip for now
-        const mathEdges = miniApp?.edges?.filter((e: any) => e.sourceNodeId === nodeId);
-        for (const edge of mathEdges || []) {
-          await executeNode(edge.targetNodeId);
+        if (interpolatedData.variableId) {
+          const val1 = parseFloat(interpolatedData.amount) || 0;
+          const val2 = parseFloat(interpolatedData.value2) || 0;
+          let result = 0;
+          switch (interpolatedData.operation) {
+            case 'add': result = val1 + val2; break;
+            case 'subtract': result = val1 - val2; break;
+            case 'multiply': result = val1 * val2; break;
+            case 'divide': result = val2 !== 0 ? val1 / val2 : 0; break;
+          }
+          setVariableValues(prev => ({ ...prev, [interpolatedData.variableId]: result }));
         }
-        break;
-
-      case 'onInputChange':
-      case 'onToggleChange':
-      case 'onSliderChange':
-        // These are event handlers, execute connected nodes
-        const eventEdges = miniApp?.edges?.filter((e: any) => e.sourceNodeId === nodeId);
-        for (const edge of eventEdges || []) {
-          await executeNode(edge.targetNodeId);
-        }
-        break;
-
-      case 'ifElse':
-        // Conditional logic - would need comparison implementation
-        const ifElseEdges = miniApp?.edges?.filter((e: any) => e.sourceNodeId === nodeId);
-        for (const edge of ifElseEdges || []) {
-          await executeNode(edge.targetNodeId);
-        }
-        break;
-
-      case 'compare':
-        // Compare values - would need comparison implementation
-        const compareEdges = miniApp?.edges?.filter((e: any) => e.sourceNodeId === nodeId);
-        for (const edge of compareEdges || []) {
-          await executeNode(edge.targetNodeId);
-        }
-        break;
-
-      case 'delay':
-        // Delay execution
-        const delayMs = node.data.amount || 1000;
-        await new Promise(resolve => setTimeout(resolve, delayMs));
-        const delayEdges = miniApp?.edges?.filter((e: any) => e.sourceNodeId === nodeId);
-        for (const edge of delayEdges || []) {
-          await executeNode(edge.targetNodeId);
+        for (const targetId of findNextNodes()) {
+          await executeNode(targetId, nodes, edges);
         }
         break;
 
       case 'random':
-        // Generate random number
-        const randomEdges = miniApp?.edges?.filter((e: any) => e.sourceNodeId === nodeId);
-        for (const edge of randomEdges || []) {
-          await executeNode(edge.targetNodeId);
+        if (interpolatedData.variableId) {
+          const max = parseInt(interpolatedData.amount) || 100;
+          const result = Math.floor(Math.random() * (max + 1));
+          setVariableValues(prev => ({ ...prev, [interpolatedData.variableId]: result }));
+        }
+        for (const targetId of findNextNodes()) {
+          await executeNode(targetId, nodes, edges);
         }
         break;
 
       case 'textManipulation':
-        // Text operations
-        const textEdges = miniApp?.edges?.filter((e: any) => e.sourceNodeId === nodeId);
-        for (const edge of textEdges || []) {
-          await executeNode(edge.targetNodeId);
+        if (interpolatedData.variableId) {
+          const text = String(interpolatedData.value || '');
+          let result = text;
+          switch (interpolatedData.operation) {
+            case 'uppercase': result = text.toUpperCase(); break;
+            case 'lowercase': result = text.toLowerCase(); break;
+            case 'trim': result = text.trim(); break;
+            case 'reverse': result = text.split('').reverse().join(''); break;
+          }
+          setVariableValues(prev => ({ ...prev, [interpolatedData.variableId]: result }));
+        }
+        for (const targetId of findNextNodes()) {
+          await executeNode(targetId, nodes, edges);
         }
         break;
 
       case 'saveToStorage':
-        // Save to localStorage
-        const saveEdges = miniApp?.edges?.filter((e: any) => e.sourceNodeId === nodeId);
-        for (const edge of saveEdges || []) {
-          await executeNode(edge.targetNodeId);
+        if (interpolatedData.value) { // Key
+          const key = `miniapp_storage_${interpolatedData.value}`;
+          const valueToSave = interpolatedData.variableId ? (variableValues[interpolatedData.variableId] ?? '') : interpolatedData.amount;
+          localStorage.setItem(key, JSON.stringify(valueToSave));
+        }
+        for (const targetId of findNextNodes()) {
+          await executeNode(targetId, nodes, edges);
         }
         break;
 
       case 'loadFromStorage':
-        // Load from localStorage
-        const loadEdges = miniApp?.edges?.filter((e: any) => e.sourceNodeId === nodeId);
-        for (const edge of loadEdges || []) {
-          await executeNode(edge.targetNodeId);
+        if (interpolatedData.value && interpolatedData.variableId) { // Key and target variable
+          const key = `miniapp_storage_${interpolatedData.value}`;
+          const stored = localStorage.getItem(key);
+          if (stored !== null) {
+            try {
+              setVariableValues(prev => ({ ...prev, [interpolatedData.variableId]: JSON.parse(stored) }));
+            } catch (e) {
+              setVariableValues(prev => ({ ...prev, [interpolatedData.variableId]: stored }));
+            }
+          }
+        }
+        for (const targetId of findNextNodes()) {
+          await executeNode(targetId, nodes, edges);
+        }
+        break;
+
+      case 'delay':
+        const delayMs = parseInt(interpolatedData.amount) || 1000;
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+        for (const targetId of findNextNodes()) {
+          await executeNode(targetId, nodes, edges);
         }
         break;
 
       case 'navigate':
-        // Navigate to another page
-        const navigateEdges = miniApp?.edges?.filter((e: any) => e.sourceNodeId === nodeId);
-        for (const edge of navigateEdges || []) {
-          await executeNode(edge.targetNodeId);
+        if (interpolatedData.value) {
+          window.location.href = interpolatedData.value;
         }
         break;
 
       case 'openLink':
-        // Open external link
-        const openLinkEdges = miniApp?.edges?.filter((e: any) => e.sourceNodeId === nodeId);
-        for (const edge of openLinkEdges || []) {
-          await executeNode(edge.targetNodeId);
+        if (interpolatedData.value) {
+          window.open(interpolatedData.value, '_blank');
         }
         break;
 
-      case 'loop':
-        // Loop logic
-        const loopEdges = miniApp?.edges?.filter((e: any) => e.sourceNodeId === nodeId);
-        for (const edge of loopEdges || []) {
-          await executeNode(edge.targetNodeId);
+      case 'alert':
+        if (interpolatedData.value) {
+          setMessage({ type: 'success', text: String(interpolatedData.value) });
+        }
+        for (const targetId of findNextNodes()) {
+          await executeNode(targetId, nodes, edges);
         }
         break;
 
-      case 'playSound':
-        // Play sound
-        const playSoundEdges = miniApp?.edges?.filter((e: any) => e.sourceNodeId === nodeId);
-        for (const edge of playSoundEdges || []) {
-          await executeNode(edge.targetNodeId);
+      case 'changeText':
+        if (interpolatedData.componentId && interpolatedData.value !== undefined) {
+          setMiniApp(prev => {
+            if (!prev) return prev;
+            const updatedScreens = (prev.screens || screens).map(s => {
+              // We need to find the component in ALL screens or just current? 
+              // Usually components are unique per app or per screen.
+              // Let's search in all screens for simplicity.
+              return {
+                ...s,
+                components: s.components.map(c => {
+                  if (c.id === interpolatedData.componentId) {
+                    const propKey = c.type === 'button' ? 'label' : 'content';
+                    return { ...c, props: { ...c.props, [propKey]: String(interpolatedData.value) } };
+                  }
+                  return c;
+                })
+              };
+            });
+            return { ...prev, screens: updatedScreens };
+          });
+        }
+        for (const targetId of findNextNodes()) {
+          await executeNode(targetId, nodes, edges);
+        }
+        break;
+
+      case 'compare':
+        const v1 = isNaN(parseFloat(interpolatedData.value)) ? interpolatedData.value : parseFloat(interpolatedData.value);
+        const v2 = isNaN(parseFloat(interpolatedData.value2)) ? interpolatedData.value2 : parseFloat(interpolatedData.value2);
+        let compareResult = false;
+        switch (interpolatedData.operation) {
+          case 'equals': compareResult = v1 === v2; break;
+          case 'notEquals': compareResult = v1 !== v2; break;
+          case 'greaterThan': compareResult = v1 > v2; break;
+          case 'lessThan': compareResult = v1 < v2; break;
+        }
+        for (const targetId of findNextNodes(compareResult ? 'true' : 'false')) {
+          await executeNode(targetId, nodes, edges);
+        }
+        break;
+
+      case 'addMoney':
+      case 'removeMoney':
+        const amount = parseFloat(interpolatedData.amount) || 100;
+        await executeMoneyOperation((node.data?.type === 'addMoney' || node.type === 'addMoney') ? 'add' : 'remove', amount);
+        for (const targetId of findNextNodes()) {
+          await executeNode(targetId, nodes, edges);
+        }
+        break;
+
+      case 'navigateScreen':
+        if (interpolatedData.value && screens.some((screen) => screen.id === interpolatedData.value)) {
+          setCurrentScreenId(interpolatedData.value);
+        }
+        for (const targetId of findNextNodes()) {
+          await executeNode(targetId, nodes, edges);
+        }
+        break;
+
+      case 'ifElse':
+        const varValue = variableValues[interpolatedData.variableId] ?? 0;
+        const compareValue = parseFloat(interpolatedData.value) || 0;
+        let condition = false;
+        switch (interpolatedData.operation) {
+          case 'equals': condition = varValue === compareValue; break;
+          case 'notEquals': condition = varValue !== compareValue; break;
+          case 'greaterThan': condition = varValue > compareValue; break;
+          case 'lessThan': condition = varValue < compareValue; break;
+        }
+        for (const targetId of findNextNodes(condition ? 'true' : 'false')) {
+          await executeNode(targetId, nodes, edges);
         }
         break;
     }
   };
 
   const executeVariableOperation = async (variableId: string, operation: 'add' | 'subtract', amount: number) => {
-    // Client-side variable operation
     const currentValue = variableValues[variableId] ?? 0;
-    let newValue: number;
-    
-    if (operation === 'add') {
-      newValue = currentValue + amount;
-    } else {
-      newValue = currentValue - amount;
-    }
-    
+    const newValue = operation === 'add' ? currentValue + amount : currentValue - amount;
     setVariableValues(prev => ({ ...prev, [variableId]: newValue }));
   };
 
   const setVariableValue = async (variableId: string, value: number) => {
-    // Client-side variable set
     setVariableValues(prev => ({ ...prev, [variableId]: value }));
   };
 
   const executeMoneyOperation = async (operation: 'add' | 'remove', amount: number) => {
     try {
-      const res = await fetch('/api/miniapps/execute', {
+      await fetch('/api/miniapps/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -340,43 +453,65 @@ export default function RunMiniAppPage({ params }: { params: Promise<{ id: strin
           silent: true,
         }),
       });
-
-      if (res.ok) {
-        // Variables are now stored locally, no need to refresh from server
-      }
     } catch (error) {
       console.error('Failed to execute money operation:', error);
     }
   };
 
-  const interpolateVariables = (text: string): string => {
-    if (!text) return text;
-    return text.replace(/\{(\w+)\}/g, (match, varName) => {
-      const variable = miniApp?.variables.find(v => v.name === varName);
-      if (variable) {
-        const value = variableValues[variable.id] ?? variable.defaultValue;
-        return value.toString();
-      }
-      return match; // Keep original if variable not found
+  const executeNodeGraph = async (componentId: string) => {
+    const buttonClickNode = activeNodes.find(
+      (n: any) => (n.data?.type === 'buttonClick' || n.type === 'buttonClick') && n.data.componentId === componentId
+    );
+    if (!buttonClickNode) return;
+    setExecuting(componentId);
+    try {
+      await executeNode(buttonClickNode.id, activeNodes, activeEdges);
+    } finally {
+      setExecuting(null);
+    }
+  };
+
+  const updateComponentValue = (componentId: string, value: any) => {
+    setMiniApp(prev => {
+      if (!prev) return prev;
+      const updatedScreens = (prev.screens || screens).map(s => {
+        if (s.id !== currentScreenId) return s;
+        return {
+          ...s,
+          components: s.components.map(c => c.id === componentId ? { ...c, props: { ...c.props, value } } : c)
+        };
+      });
+      return { ...prev, screens: updatedScreens };
     });
   };
 
   const renderComponent = (component: MiniAppComponent) => {
+    const width = component.props.width !== 'auto' ? component.props.width : '100%';
+    const height = component.props.height !== 'auto' ? component.props.height : 'auto';
+
     switch (component.type) {
       case 'button':
+      case 'iconButton':
         const IconComponent = ICONS[component.props.icon as keyof typeof ICONS];
-        const displayLabel = interpolateVariables(component.props.label);
+        const displayLabel = component.type === 'button' ? interpolateVariables(component.props.label) : '';
         return (
           <button
             onClick={() => executeNodeGraph(component.id)}
             disabled={executing === component.id}
             className={cn(
-              'w-full p-4 font-bold border-2 transition-all flex items-center justify-center gap-2',
-              component.props.variant === 'primary'
-                ? 'bg-mnr-accent text-black border-mnr-accent shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
-                : 'bg-mnr-surface text-mnr-text border-mnr-border hover:border-mnr-accent',
+              component.type === 'button' ? 'w-full p-4 font-bold border-2' : 'rounded-full border-2 flex items-center justify-center',
+              'active:brightness-90 flex items-center justify-center gap-2',
               executing === component.id && 'opacity-50 cursor-not-allowed'
             )}
+            style={{ 
+              backgroundColor: component.props.backgroundColor, 
+              color: component.props.textColor, 
+              borderColor: component.props.backgroundColor,
+              width: component.type === 'iconButton' ? (component.props.width !== 'auto' ? component.props.width : '48px') : width,
+              height: component.type === 'iconButton' ? (component.props.height !== 'auto' ? component.props.height : '48px') : height,
+              minWidth: component.type === 'iconButton' ? '40px' : 'auto',
+              minHeight: component.type === 'iconButton' ? '40px' : 'auto'
+            }}
           >
             {executing === component.id ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
             {IconComponent && <IconComponent className="h-5 w-5" />}
@@ -384,52 +519,18 @@ export default function RunMiniAppPage({ params }: { params: Promise<{ id: strin
           </button>
         );
       case 'text':
-        const sizeClasses = {
-          small: 'text-sm',
-          medium: 'text-base',
-          large: 'text-xl',
-        };
-        const alignClasses = {
-          left: 'text-left',
-          center: 'text-center',
-          right: 'text-right',
-        };
-        let displayContent = component.props.content;
-        // First apply the old showVariable format if enabled
-        if (component.props.showVariable && component.props.variableId) {
-          const value = variableValues[component.props.variableId] ?? 0;
-          displayContent = component.props.variableFormat.replace('{value}', value.toString());
-        }
-        // Then apply general variable interpolation
-        displayContent = interpolateVariables(displayContent);
         return (
           <div
-            className={cn(
-              'font-bold text-mnr-text',
-              sizeClasses[component.props.size as keyof typeof sizeClasses],
-              alignClasses[component.props.align as keyof typeof alignClasses]
-            )}
+            className="font-bold p-2"
+            style={{ 
+              fontSize: `${component.props.fontSize}px`, 
+              fontFamily: component.props.fontFamily, 
+              color: component.props.color,
+              textAlign: component.props.align as any,
+              width, height
+            }}
           >
-            {displayContent}
-          </div>
-        );
-      case 'spacer':
-        return <div style={{ height: component.props.height }} />;
-      case 'image':
-        return (
-          <div className="border-2 border-mnr-border overflow-hidden">
-            {component.props.src ? (
-              <img
-                src={component.props.src}
-                alt={component.props.alt || ''}
-                className="w-full h-auto"
-                style={{ objectFit: component.props.objectFit || 'cover' }}
-              />
-            ) : (
-              <div className="w-full h-32 bg-mnr-surface flex items-center justify-center text-mnr-muted text-sm">
-                Изображение
-              </div>
-            )}
+            {interpolateVariables(component.props.showVariable ? component.props.variableFormat.replace('{value}', `{${miniApp?.variables.find(v => v.id === component.props.variableId)?.name}}`) : component.props.content)}
           </div>
         );
       case 'input':
@@ -437,60 +538,32 @@ export default function RunMiniAppPage({ params }: { params: Promise<{ id: strin
           <input
             type={component.props.inputType || 'text'}
             placeholder={component.props.placeholder || ''}
+            value={component.props.value || ''}
+            onChange={(e) => {
+              const val = e.target.value;
+              updateComponentValue(component.id, val);
+              const eventNode = activeNodes.find(n => (n.data?.type === 'onInputChange' || n.type === 'onInputChange') && n.data.componentId === component.id);
+              if (eventNode) executeNode(eventNode.id, activeNodes, activeEdges, { type: 'onInputChange', value: val });
+            }}
             className="w-full p-3 bg-mnr-surface border-2 border-mnr-border text-mnr-text font-bold focus:border-mnr-accent outline-none"
+            style={{ width, height }}
           />
         );
-      case 'counter':
+      case 'image':
         return (
-          <div className="flex items-center gap-2 bg-mnr-surface border-2 border-mnr-border p-2">
-            <button className="w-8 h-8 bg-mnr-accent text-black font-bold border-2 border-black">-</button>
-            <span className="font-bold text-mnr-text text-xl">{component.props.value || 0}</span>
-            <button className="w-8 h-8 bg-mnr-accent text-black font-bold border-2 border-black">+</button>
-          </div>
-        );
-      case 'progress':
-        return (
-          <div className="w-full">
-            <div className="w-full h-4 bg-mnr-surface border-2 border-mnr-border overflow-hidden">
-              <div
-                className="h-full bg-mnr-accent transition-all"
-                style={{ width: `${component.props.value || 0}%` }}
-              />
-            </div>
-          </div>
-        );
-      case 'toggle':
-        return (
-          <div className="relative w-12 h-6 transition-colors" style={{ backgroundColor: component.props.value ? '#6366f1' : '#18181b', border: component.props.value ? 'none' : '2px solid #333' }}>
-            <div className="absolute top-1 w-4 h-4 bg-black transition-all" style={{ left: component.props.value ? '28px' : '4px' }} />
-          </div>
-        );
-      case 'slider':
-        return (
-          <input
-            type="range"
-            min={component.props.min || 0}
-            max={component.props.max || 100}
-            value={component.props.value || 50}
-            className="w-full accent-mnr-accent"
-          />
-        );
-      case 'card':
-        return (
-          <div className="bg-mnr-surface border-2 border-mnr-border p-4">
-            {component.props.title && (
-              <div className="font-bold text-mnr-text mb-2">{component.props.title}</div>
-            )}
-            {component.props.content && (
-              <div className="text-mnr-muted text-sm">{component.props.content}</div>
+          <div className="border-2 border-mnr-border overflow-hidden" style={{ width, height }}>
+            {component.props.src ? (
+              <img src={component.props.src} alt={component.props.alt || ''} className="w-full h-full" style={{ objectFit: component.props.objectFit || 'cover' }} />
+            ) : (
+              <div className="w-full h-full bg-mnr-surface flex items-center justify-center text-mnr-muted text-sm">Изображение</div>
             )}
           </div>
         );
       case 'divider':
-        return <div className="w-full h-px bg-mnr-border" />;
+        return <div className="w-full h-px bg-mnr-border" style={{ width, height }} />;
       case 'avatar':
         return (
-          <div className="w-12 h-12 rounded-full bg-mnr-surface border-2 border-mnr-border flex items-center justify-center overflow-hidden">
+          <div className="rounded-full bg-mnr-surface border-2 border-mnr-border flex items-center justify-center overflow-hidden" style={{ width: height || '48px', height: height || '48px' }}>
             {component.props.src ? (
               <img src={component.props.src} alt="" className="w-full h-full object-cover" />
             ) : (
@@ -500,7 +573,7 @@ export default function RunMiniAppPage({ params }: { params: Promise<{ id: strin
         );
       case 'badge':
         return (
-          <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border-2" style={{ backgroundColor: component.props.variant === 'primary' ? '#6366f1' : '#18181b', color: component.props.variant === 'primary' ? 'black' : '#fff', borderColor: component.props.variant === 'primary' ? '#6366f1' : '#333' }}>
+          <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border-2" style={{ backgroundColor: component.props.variant === 'primary' ? '#6366f1' : '#18181b', color: component.props.variant === 'primary' ? 'black' : '#fff', borderColor: component.props.variant === 'primary' ? '#6366f1' : '#333', width, height }}>
             {component.props.text || 'Badge'}
           </div>
         );
@@ -510,12 +583,13 @@ export default function RunMiniAppPage({ params }: { params: Promise<{ id: strin
             className="grid gap-2 border-2 border-dashed border-mnr-border/30 p-2"
             style={{ 
               gridTemplateColumns: `repeat(${component.props.columns}, 1fr)`,
-              gap: `${component.props.gap}px`
+              gap: `${component.props.gap}px`,
+              width, height
             }}
           >
             {Array.from({ length: component.props.columns }).map((_, i) => {
               const cellComponentId = (component.props.cellComponents || [])[i];
-              const cellComponent = miniApp?.components.find(c => c.id === cellComponentId);
+              const cellComponent = activeComponents.find(c => c.id === cellComponentId);
               return (
                 <div key={i} className="bg-mnr-surface border border-mnr-border min-h-[64px] flex items-center justify-center">
                   {cellComponent ? (
@@ -530,72 +604,40 @@ export default function RunMiniAppPage({ params }: { params: Promise<{ id: strin
             })}
           </div>
         );
-      default:
-        return null;
+      default: return null;
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex flex-col h-full font-sans items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-mnr-accent" />
-        <p className="mt-4 text-mnr-muted font-bold">Загрузка...</p>
-      </div>
-    );
-  }
+  if (loading) return <div className="flex h-full items-center justify-center bg-[#0c0c0e]"><Loader2 className="h-8 w-8 animate-spin text-mnr-accent" /></div>;
+  if (!miniApp) return <div className="flex h-full items-center justify-center bg-[#0c0c0e] text-mnr-text font-bold">Приложение не найдено</div>;
 
-  if (!miniApp) {
-    return (
-      <div className="flex flex-col h-full font-sans items-center justify-center">
-        <p className="text-mnr-muted font-bold">Приложение не найдено</p>
-        <FastTransitionLink
-          href="/miniapps/marketplace"
-          className="mt-4 px-4 py-2 bg-mnr-accent text-black border-2 border-mnr-accent font-bold"
-        >
-          Вернуться
-        </FastTransitionLink>
-      </div>
-    );
-  }
+  const orderedComponents = [...activeComponents].sort((a, b) => a.order - b.order);
+  const isAbsoluteLayout = orderedComponents.some(c => c.props.desktopX !== undefined || c.props.mobileX !== undefined || c.props.x !== undefined);
 
   return (
-    <div className="flex flex-col h-full font-sans">
-      {/* Header */}
+    <div className="flex flex-col h-full font-sans bg-[#0c0c0e]">
       <div className="flex items-center justify-between px-6 pt-8 pb-4 border-b border-mnr-border">
         <div className="flex items-center gap-4">
-          <FastTransitionLink href="/miniapps/marketplace">
-            <ArrowLeft className="h-6 w-6 text-mnr-text" />
-          </FastTransitionLink>
+          <FastTransitionLink href="/miniapps/marketplace"><ArrowLeft className="h-6 w-6 text-mnr-text" /></FastTransitionLink>
           <div>
-            <div className="text-[20px] font-bold tracking-[-1px] uppercase text-mnr-text">
-              {miniApp.name}
-            </div>
+            <div className="text-[20px] font-bold tracking-[-1px] uppercase text-mnr-text">{miniApp.name}</div>
             <div className="text-xs text-mnr-muted">@{miniApp.authorUsername}</div>
           </div>
         </div>
       </div>
-
-      {/* Message */}
-      {message && (
-        <div
-          className={cn(
-            'mx-6 mt-4 p-4 border-2 font-bold text-sm',
-            message.type === 'success'
-              ? 'bg-green-900/30 text-green-400 border-green-600'
-              : 'bg-red-900/30 text-red-400 border-red-600'
-          )}
-        >
-          {message.text}
-        </div>
-      )}
-
-      {/* App Content */}
+      {message && <div className={cn('mx-6 mt-4 p-4 border-2 font-bold text-sm', message.type === 'success' ? 'bg-green-900/30 text-green-400 border-green-600' : 'bg-red-900/30 text-red-400 border-red-600')}>{message.text}</div>}
       <div className="flex-1 p-6 overflow-y-auto">
-        <div className="max-w-md mx-auto space-y-4">
-          {miniApp.components.map((component) => (
-            <div key={component.id}>{renderComponent(component)}</div>
-          ))}
-        </div>
+        {isAbsoluteLayout ? (
+          <div className="w-full max-w-5xl mx-auto min-h-[700px] relative">
+            {orderedComponents.map((c) => {
+              const x = isMobileViewport ? (c.props.mobileX ?? c.props.x ?? 0) : (c.props.desktopX ?? c.props.x ?? 0);
+              const y = isMobileViewport ? (c.props.mobileY ?? c.props.y ?? 0) : (c.props.desktopY ?? c.props.y ?? 0);
+              return <div key={c.id} className="absolute" style={{ left: x, top: y, width: c.props.width !== 'auto' ? c.props.width : 'auto', height: c.props.height !== 'auto' ? c.props.height : 'auto' }}>{renderComponent(c)}</div>;
+            })}
+          </div>
+        ) : (
+          <div className="max-w-md mx-auto space-y-4">{orderedComponents.map(c => <div key={c.id}>{renderComponent(c)}</div>)}</div>
+        )}
       </div>
     </div>
   );

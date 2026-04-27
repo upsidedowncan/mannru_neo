@@ -106,6 +106,14 @@ export interface MiniApp {
   authorId: string;
   authorUsername: string;
   components: MiniAppComponent[];
+  screens?: Array<{
+    id: string;
+    name: string;
+    components: MiniAppComponent[];
+    nodes: any[];
+    edges: any[];
+  }>;
+  startScreenId?: string;
   variables: any[];
   nodes?: any[];
   edges?: any[];

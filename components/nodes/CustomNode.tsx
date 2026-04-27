@@ -2,7 +2,7 @@
 
 import React, { memo } from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
-import { MousePointer, ArrowUp, ArrowDown, FileText, DollarSign, TrendingDown, Calculator, X, Keyboard, ToggleRight, Sliders, GitBranch, Scale, Clock, Shuffle, Type, Save as SaveIcon, FolderOpen, ExternalLink, RotateCcw, Play } from 'lucide-react';
+import { MousePointer, ArrowUp, ArrowDown, FileText, DollarSign, TrendingDown, Calculator, X, Keyboard, ToggleRight, Sliders, GitBranch, Scale, Clock, Shuffle, Type, Save as SaveIcon, FolderOpen, ExternalLink, RotateCcw, Play, Plus } from 'lucide-react';
 import { Combobox } from '@/components/ui/combobox';
 import { cn } from '@/lib/utils';
 
@@ -57,6 +57,8 @@ export const CustomNode = memo(function CustomNode({ data, selected }: NodeProps
       openLink: ExternalLink,
       loop: RotateCcw,
       playSound: Play,
+      alert: Type,
+      changeText: Type,
     };
     return icons[type] || FileText;
   };
@@ -85,11 +87,22 @@ export const CustomNode = memo(function CustomNode({ data, selected }: NodeProps
       openLink: 'Открыть ссылку',
       loop: 'Цикл',
       playSound: 'Воспроизвести звук',
+      alert: 'Показать уведомление',
+      changeText: 'Изменить текст',
     };
     return labels[type] || type;
   };
 
+  const getNodeColor = (type: string) => {
+    if (['buttonClick', 'onInputChange', 'onToggleChange', 'onSliderChange'].includes(type)) return 'border-blue-500 shadow-blue-500/20';
+    if (['ifElse', 'compare', 'math', 'random', 'textManipulation'].includes(type)) return 'border-orange-500 shadow-orange-500/20';
+    if (['incrementVar', 'decrementVar', 'setVar', 'addMoney', 'removeMoney', 'saveToStorage', 'loadFromStorage', 'playSound', 'delay', 'loop', 'changeText'].includes(type)) return 'border-green-500 shadow-green-500/20';
+    if (['navigate', 'navigateScreen', 'openLink'].includes(type)) return 'border-purple-500 shadow-purple-500/20';
+    return 'border-mnr-border';
+  };
+
   const Icon = getNodeIcon(typedData.type);
+  const nodeColorClass = getNodeColor(typedData.type);
 
   const handleUpdate = (key: string, value: any) => {
     if (typedData.updateNodeData) {
@@ -98,12 +111,74 @@ export const CustomNode = memo(function CustomNode({ data, selected }: NodeProps
   };
 
   const renderNodeContent = () => {
+    const renderNodeField = (label: string, valueKey: string, placeholder: string = "Значение") => {
+      const value = (typedData as any)[valueKey] ?? '';
+      
+      return (
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <label className="text-[10px] font-bold text-mnr-muted uppercase">{label}</label>
+            <div className="group relative">
+              <button className="text-mnr-accent hover:text-mnr-accent/80 transition-all p-1">
+                <Plus className="h-3 w-3" />
+              </button>
+              <div className="absolute right-0 top-full w-48 pt-1 hidden group-hover:block z-50">
+                <div className="bg-[#18181b] border border-mnr-border shadow-xl rounded p-2">
+                  <div className="text-[9px] font-bold text-mnr-muted mb-2 uppercase border-b border-mnr-border pb-1">Вставить блок</div>
+                  <div className="space-y-1 max-h-40 overflow-y-auto custom-scrollbar">
+                    {currentVariables.map(v => (
+                      <button 
+                        key={v.id}
+                        onClick={() => handleUpdate(valueKey, `${value}{${v.name}}`)}
+                        className="w-full text-left p-1 hover:bg-mnr-accent/10 text-[10px] text-mnr-text rounded transition-all truncate"
+                      >
+                        {v.name}
+                      </button>
+                    ))}
+                    <div className="h-px bg-mnr-border my-1" />
+                    {currentComponents.map(c => (
+                      <button 
+                        key={c.id}
+                        onClick={() => handleUpdate(valueKey, `${value}{${c.props.label || c.props.placeholder || c.id.slice(0,4)}.value}`)}
+                        className="w-full text-left p-1 hover:bg-mnr-accent/10 text-[10px] text-mnr-text rounded transition-all truncate"
+                      >
+                        {c.props.label || c.props.placeholder || `Comp ${c.id.slice(0,4)}`}
+                      </button>
+                    ))}
+                    <div className="h-px bg-mnr-border my-1" />
+                    <button 
+                      onClick={() => handleUpdate(valueKey, `${value}{trigger.value}`)}
+                      className="w-full text-left p-1 hover:bg-mnr-accent/10 text-[10px] text-mnr-accent rounded transition-all truncate font-bold"
+                    >
+                      trigger.value
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => handleUpdate(valueKey, e.target.value)}
+            className="w-full p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-xs font-bold focus:border-mnr-accent outline-none nodrag"
+            placeholder={placeholder}
+          />
+        </div>
+      );
+    };
+
     switch (typedData.type) {
       case 'buttonClick':
         return (
           <div className="space-y-2 nodrag">
             <Combobox
-              options={currentComponents.filter((c) => c.type === 'button').map((c) => ({ value: c.id, label: c.props.label })) || []}
+              options={currentComponents
+                .filter((c) => c.type === 'button' || c.type === 'iconButton')
+                .map((c) => ({
+                  value: c.id,
+                  label: c.type === 'button' ? c.props.label : `Иконка ${c.id.slice(0, 4)}`,
+                })) || []}
               value={typedData.componentId || ''}
               onChange={(value) => handleUpdate('componentId', value)}
               placeholder="Выберите кнопку"
@@ -122,41 +197,10 @@ export const CustomNode = memo(function CustomNode({ data, selected }: NodeProps
               onChange={(value) => handleUpdate('variableId', value)}
               placeholder="Выберите переменную"
             />
-            {typedData.type === 'setVar' ? (
-              <input
-                type="text"
-                value={typedData.value ?? 0}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val.startsWith('{')) {
-                    handleUpdate('value', val);
-                    return;
-                  }
-
-                  const parsed = parseFloat(val);
-                  handleUpdate('value', Number.isNaN(parsed) ? val : parsed);
-                }}
-                className="w-full p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-xs font-bold focus:border-mnr-accent outline-none nodrag"
-                placeholder="Значение или {переменная}"
-              />
-            ) : (
-              <input
-                type="text"
-                value={typedData.amount ?? 1}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val.startsWith('{')) {
-                    handleUpdate('amount', val);
-                    return;
-                  }
-
-                  const parsed = parseFloat(val);
-                  handleUpdate('amount', Number.isNaN(parsed) ? val : parsed);
-                }}
-                className="w-full p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-xs font-bold focus:border-mnr-accent outline-none nodrag"
-                placeholder="Значение или {переменная}"
-              />
-            )}
+            {typedData.type === 'setVar' 
+              ? renderNodeField("Значение", "value", "Значение или {блок}")
+              : renderNodeField("На сколько", "amount", "1")
+            }
           </div>
         );
 
@@ -164,22 +208,7 @@ export const CustomNode = memo(function CustomNode({ data, selected }: NodeProps
       case 'removeMoney':
         return (
           <div className="space-y-2 nodrag">
-            <input
-              type="text"
-              value={typedData.amount ?? 100}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (val.startsWith('{')) {
-                  handleUpdate('amount', val);
-                  return;
-                }
-
-                const parsed = parseFloat(val);
-                handleUpdate('amount', Number.isNaN(parsed) ? val : parsed);
-              }}
-              className="w-full p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-xs font-bold focus:border-mnr-accent outline-none nodrag"
-              placeholder="Сумма или {переменная}"
-            />
+            {renderNodeField("Сумма", "amount", "100")}
           </div>
         );
 
@@ -203,38 +232,8 @@ export const CustomNode = memo(function CustomNode({ data, selected }: NodeProps
               onChange={(value) => handleUpdate('variableId', value)}
               placeholder="Переменная"
             />
-            <input
-              type="text"
-              value={typedData.amount ?? 1}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (val.startsWith('{')) {
-                  handleUpdate('amount', val);
-                  return;
-                }
-
-                const parsed = parseFloat(val);
-                handleUpdate('amount', Number.isNaN(parsed) ? val : parsed);
-              }}
-              className="w-full p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-xs font-bold focus:border-mnr-accent outline-none nodrag"
-              placeholder="Значение 1"
-            />
-            <input
-              type="text"
-              value={typedData.value2 ?? 1}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (val.startsWith('{')) {
-                  handleUpdate('value2', val);
-                  return;
-                }
-
-                const parsed = parseFloat(val);
-                handleUpdate('value2', Number.isNaN(parsed) ? val : parsed);
-              }}
-              className="w-full p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-xs font-bold focus:border-mnr-accent outline-none nodrag"
-              placeholder="Значение 2"
-            />
+            {renderNodeField("Значение 1", "amount", "1")}
+            {renderNodeField("Значение 2", "value2", "1")}
           </div>
         );
 
@@ -294,13 +293,7 @@ export const CustomNode = memo(function CustomNode({ data, selected }: NodeProps
               onChange={(value) => handleUpdate('operation', value)}
               placeholder="Операция"
             />
-            <input
-              type="text"
-              value={typedData.value ?? ''}
-              onChange={(e) => handleUpdate('value', e.target.value)}
-              className="w-full p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-xs font-bold focus:border-mnr-accent outline-none nodrag"
-              placeholder="Значение"
-            />
+            {renderNodeField("С чем сравнить", "value", "")}
           </div>
         );
 
@@ -318,46 +311,22 @@ export const CustomNode = memo(function CustomNode({ data, selected }: NodeProps
               onChange={(value) => handleUpdate('operation', value)}
               placeholder="Операция"
             />
-            <input
-              type="text"
-              value={typedData.value ?? ''}
-              onChange={(e) => handleUpdate('value', e.target.value)}
-              className="w-full p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-xs font-bold focus:border-mnr-accent outline-none nodrag"
-              placeholder="Значение 1"
-            />
-            <input
-              type="text"
-              value={typedData.value2 ?? ''}
-              onChange={(e) => handleUpdate('value2', e.target.value)}
-              className="w-full p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-xs font-bold focus:border-mnr-accent outline-none nodrag"
-              placeholder="Значение 2"
-            />
+            {renderNodeField("Значение 1", "value", "")}
+            {renderNodeField("Значение 2", "value2", "")}
           </div>
         );
 
       case 'delay':
         return (
           <div className="space-y-2 nodrag">
-            <input
-              type="number"
-              value={typedData.amount ?? 1000}
-              onChange={(e) => handleUpdate('amount', parseInt(e.target.value) || 1000)}
-              className="w-full p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-xs font-bold focus:border-mnr-accent outline-none nodrag"
-              placeholder="Миллисекунды"
-            />
+            {renderNodeField("Задержка (мс)", "amount", "1000")}
           </div>
         );
 
       case 'random':
         return (
           <div className="space-y-2 nodrag">
-            <input
-              type="number"
-              value={typedData.amount ?? 100}
-              onChange={(e) => handleUpdate('amount', parseInt(e.target.value) || 100)}
-              className="w-full p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-xs font-bold focus:border-mnr-accent outline-none nodrag"
-              placeholder="Максимум"
-            />
+            {renderNodeField("Максимум", "amount", "100")}
           </div>
         );
 
@@ -375,6 +344,7 @@ export const CustomNode = memo(function CustomNode({ data, selected }: NodeProps
               onChange={(value) => handleUpdate('operation', value)}
               placeholder="Операция"
             />
+            {renderNodeField("Текст", "value", "")}
           </div>
         );
 
@@ -382,26 +352,23 @@ export const CustomNode = memo(function CustomNode({ data, selected }: NodeProps
       case 'loadFromStorage':
         return (
           <div className="space-y-2 nodrag">
-            <input
-              type="text"
-              value={typedData.value ?? ''}
-              onChange={(e) => handleUpdate('value', e.target.value)}
-              className="w-full p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-xs font-bold focus:border-mnr-accent outline-none nodrag"
-              placeholder="Ключ"
-            />
+            {renderNodeField("Ключ", "value", "")}
+            {typedData.type === 'loadFromStorage' && (
+              <Combobox
+                options={currentVariables.map((v) => ({ value: v.id, label: v.name })) || []}
+                value={typedData.variableId || ''}
+                onChange={(value) => handleUpdate('variableId', value)}
+                placeholder="Записать в переменную"
+              />
+            )}
+            {typedData.type === 'saveToStorage' && renderNodeField("Значение", "amount", "")}
           </div>
         );
 
       case 'navigate':
         return (
           <div className="space-y-2 nodrag">
-            <input
-              type="text"
-              value={typedData.value ?? ''}
-              onChange={(e) => handleUpdate('value', e.target.value)}
-              className="w-full p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-xs font-bold focus:border-mnr-accent outline-none nodrag"
-              placeholder="Путь"
-            />
+            {renderNodeField("Путь", "value", "/...")}
           </div>
         );
 
@@ -418,41 +385,42 @@ export const CustomNode = memo(function CustomNode({ data, selected }: NodeProps
         );
 
       case 'openLink':
+      case 'alert':
         return (
           <div className="space-y-2 nodrag">
-            <input
-              type="text"
-              value={typedData.value ?? ''}
-              onChange={(e) => handleUpdate('value', e.target.value)}
-              className="w-full p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-xs font-bold focus:border-mnr-accent outline-none nodrag"
-              placeholder="URL"
+            {renderNodeField(typedData.type === 'alert' ? "Сообщение" : "URL", "value", "")}
+          </div>
+        );
+
+      case 'changeText':
+        return (
+          <div className="space-y-2 nodrag">
+            <Combobox
+              options={currentComponents
+                .filter((c) => ['text', 'button', 'badge'].includes(c.type))
+                .map((c) => ({
+                  value: c.id,
+                  label: c.type === 'button' ? c.props.label : `${c.type} ${c.id.slice(0, 4)}`,
+                })) || []}
+              value={typedData.componentId || ''}
+              onChange={(value) => handleUpdate('componentId', value)}
+              placeholder="Выберите компонент"
             />
+            {renderNodeField("Новый текст", "value", "")}
           </div>
         );
 
       case 'loop':
         return (
           <div className="space-y-2 nodrag">
-            <input
-              type="number"
-              value={typedData.amount ?? 1}
-              onChange={(e) => handleUpdate('amount', parseInt(e.target.value) || 1)}
-              className="w-full p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-xs font-bold focus:border-mnr-accent outline-none nodrag"
-              placeholder="Итерации"
-            />
+            {renderNodeField("Итерации", "amount", "1")}
           </div>
         );
 
       case 'playSound':
         return (
           <div className="space-y-2 nodrag">
-            <input
-              type="text"
-              value={typedData.value ?? ''}
-              onChange={(e) => handleUpdate('value', e.target.value)}
-              className="w-full p-2 bg-[#0c0c0e] border border-mnr-border text-mnr-text text-xs font-bold focus:border-mnr-accent outline-none nodrag"
-              placeholder="URL звука"
-            />
+            {renderNodeField("URL звука", "value", "https://...")}
           </div>
         );
 
@@ -461,16 +429,17 @@ export const CustomNode = memo(function CustomNode({ data, selected }: NodeProps
     }
   };
 
-  const hasInput = ['incrementVar', 'decrementVar', 'setVar', 'addMoney', 'removeMoney', 'math', 'onInputChange', 'onToggleChange', 'onSliderChange', 'ifElse', 'compare', 'delay', 'random', 'textManipulation', 'saveToStorage', 'loadFromStorage', 'navigate', 'openLink', 'loop', 'playSound'].includes(typedData.type || '');
-  const hasOutput = ['buttonClick', 'incrementVar', 'decrementVar', 'setVar', 'addMoney', 'removeMoney', 'math', 'onInputChange', 'onToggleChange', 'onSliderChange', 'delay', 'random', 'textManipulation', 'saveToStorage', 'loadFromStorage', 'navigate', 'openLink', 'loop', 'playSound'].includes(typedData.type || '');
+  const hasInput = ['incrementVar', 'decrementVar', 'setVar', 'addMoney', 'removeMoney', 'math', 'onInputChange', 'onToggleChange', 'onSliderChange', 'ifElse', 'compare', 'delay', 'random', 'textManipulation', 'saveToStorage', 'loadFromStorage', 'navigate', 'navigateScreen', 'openLink', 'loop', 'playSound', 'alert', 'changeText'].includes(typedData.type || '');
+  const hasOutput = ['buttonClick', 'incrementVar', 'decrementVar', 'setVar', 'addMoney', 'removeMoney', 'math', 'onInputChange', 'onToggleChange', 'onSliderChange', 'delay', 'random', 'textManipulation', 'saveToStorage', 'loadFromStorage', 'navigate', 'navigateScreen', 'openLink', 'loop', 'playSound', 'alert', 'changeText'].includes(typedData.type || '');
   const hasConditionalOutput = ['ifElse', 'compare'].includes(typedData.type || '');
   const hasMultipleInputs = ['compare', 'math'].includes(typedData.type || '');
 
   return (
     <div
       className={cn(
-        'bg-[#18181b] border-2 p-3 rounded-lg shadow-lg min-w-[200px]',
-        selected ? 'border-mnr-accent' : 'border-mnr-border'
+        'bg-[#18181b] border-2 p-3 rounded-lg shadow-lg min-w-[200px] transition-all',
+        selected ? 'ring-2 ring-mnr-accent ring-offset-2 ring-offset-[#0c0c0e]' : '',
+        nodeColorClass
       )}
     >
       {hasInput && (
